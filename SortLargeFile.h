@@ -1,33 +1,38 @@
-#include <bits/stdc++.h>
+#include <algorithm>
 #include <cstdio>
 #include <cstdlib>
+#include <cstring>
+#include <iostream>
 #include <queue>
+#include <string>
 
 using std::queue;
+using std::string;
 
 typedef long long LL;
 
 #define APPEND_MODE 2
 #define SPLIT_MODE 1
 #define MERGE_MODE 0
+#define NOT_DEBUG_MODE false
 
 class SortLargeFile {
   private:
     LL maxBuffSize, nowBuffSize;
     int merged_counter, *buffer;
     const char *srcData, *destDir;
-    queue< char * > filePool;
+    queue< string > filePool;
 
   public:
     // contructor
-    SortLargeFile ( const char *largeFile,const char *destDir );
+    SortLargeFile ( const char *largeFile, const char *destDir );
 
 
     // methods
     void split2sorteds ( );
-    void merge2sorteds ( char *src1, char *src2 );
-    void bufout ( bool mode );
-    FILE *GetOutputFile ( int mode, char *filename );
+    void merge2sorteds ( string src1, string src2 );
+    void bufout ( short mode );
+    FILE *GetOutputFile ( short mode, char *filename );
 
 
     // static methods
