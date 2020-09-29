@@ -1,7 +1,7 @@
 #include "SortLargeFile.h"
 
 /// CTOR
-SortLargeFile::SortLargeFile ( const char *src,const char *dest ) {
+SortLargeFile::SortLargeFile ( const char *src, const char *dest ) {
     // src and dest info
     this->srcData = src;
     this->destDir = dest;
@@ -30,8 +30,7 @@ SortLargeFile::SortLargeFile ( const char *src,const char *dest ) {
     }
 
     // the remains file is the result file
-    printf ( ">>>>> ALL FINISHED ! <<<<<\n" );
-    printf ( ">>>>> Result File is : %s \n", this->filePool.front ( ) );
+    printf ( ">>>>> ALL FINISHED, Result at : %s <<<<<\n", this->filePool.back ( ) );
 }
 
 
@@ -40,7 +39,7 @@ SortLargeFile::SortLargeFile ( const char *src,const char *dest ) {
 FILE *SortLargeFile::GetOutputFile ( int mode, char *filename ) {
     // determine output file name by mode
     if ( mode == SPLIT_MODE )
-        sprintf ( filename, "%s/part%d", this->destDir, this->filePool.size ( ) );
+        sprintf ( filename, "%s/part%ld", this->destDir, this->filePool.size ( ) );
     else
         sprintf ( filename, "%s/merged%d", this->destDir, this->merged_counter );
 
@@ -66,7 +65,7 @@ void SortLargeFile::bufout ( bool mode ) {
     // output buffer
     for ( int count = 0; count < this->nowBuffSize; ++count )
         fprintf ( output, "%d\n", this->buffer[count] );
-    printf ( ">>>> output finished. pool size : %d\n", this->filePool.size ( ) );
+    printf ( ">>>> output finished. pool size : %ld\n", this->filePool.size ( ) );
 
     // close file and reset current buff size
     fclose ( output );
@@ -87,7 +86,7 @@ void SortLargeFile::split2sorteds ( ) {
             this->bufout ( SPLIT_MODE );
 
         // buffer not full or after buffer out, add next value
-        this->buffer[this->nowBuffSize++] = value;
+        this->buffer[this->nowBuffSize] = value;
     }
     // maybe buffer not full but EOF, also need to output buffer
     this->bufout ( SPLIT_MODE );
@@ -140,6 +139,6 @@ void SortLargeFile::merge2sorteds ( char *src1, char *src2 ) {
         for ( int value; fscanf ( remain, "%d", &value ); )
             fprintf ( target, "%d\n", value );
     }
-    
+
     printf ( ">>>> MERGE FINISHED : \n\t%s\n\t%s\n", src1, src2 );
 }
