@@ -43,7 +43,6 @@ SortLargeFile::SortLargeFile ( const char *src, const char *dest ) {
 
 /// determine output filename by mode
 FILE *SortLargeFile::GetOutputFile ( short mode, char *filename ) {
-    printf ( ">>>> filename src addr is %p\n", &filename );
 
     // determine output file name by mode
     if ( mode == SPLIT_MODE )
@@ -52,6 +51,7 @@ FILE *SortLargeFile::GetOutputFile ( short mode, char *filename ) {
         sprintf ( filename, "%s/outputs/merged%d", this->destDir, this->merged_counter );
 
     // w mode if SPLIT_MODE
+    printf("Mode [%.2d] GetOutputFile : %s \n", mode ,filename);
     return fopen ( filename, ( ( ( mode == SPLIT_MODE ) && NOT_DEBUG_MODE ) ? "w" : "a" ) );
 }
 
@@ -70,7 +70,7 @@ void SortLargeFile::bufout ( short mode ) {
         string char2string ( filename );
         this->filePool.push ( char2string );
     }
-    printf ( ">>>> output to : %s<<< \n", filename );
+    printf ( ">>>> [%d] bufout to : %s<<< \n", mode, filename );
 
     // output buffer
     for ( LL count = 0; count < this->nowBuffSize; ++count )
@@ -81,7 +81,7 @@ void SortLargeFile::bufout ( short mode ) {
         else if ( ( mode == MERGE_MODE ) && ( count % 10000000 == 0 ) )
             printf ( ">> buffer out, buf[%.10lld] = %d\n", count, this->buffer[count] );
 
-    printf ( ">>>> output finished. pool size : %ld\n", this->filePool.size ( ) );
+    printf ( ">>>> bufout finished. pool size : %ld\n", this->filePool.size ( ) );
 
     // close file and reset current buff size
     fclose ( output );
@@ -131,11 +131,12 @@ void SortLargeFile::merge2sorteds ( string src1, string src2 ) {
         if ( this->nowBuffSize >= this->maxBuffSize )
             this->bufout ( MERGE_MODE );
 
+        this->buffer[this->nowBuffSize] = ( value1 < value2 ) ? value1 : value2;
+
         // buffer not full or after buffer out,
         if ( this->nowBuffSize % 10000000 == 0 )
             printf ( ">> buf[%.10lld] = %d\n", this->nowBuffSize, this->buffer[this->nowBuffSize] );
 
-        this->buffer[this->nowBuffSize] = ( value1 < value2 ) ? value1 : value2;
 
         // smaller one move to next value
         if ( value1 < value2 )
