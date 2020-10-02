@@ -14,7 +14,10 @@ typedef long long LL;
 #define APPEND_MODE 2
 #define SPLIT_MODE 1
 #define MERGE_MODE 0
-#define NOT_DEBUG_MODE true
+#define NOT_DEBUG_MODE false
+
+#define LOG(...) printf(__VA_ARGS__)
+#define TimeLog(x) printf(">> cost time : %d\n",x)
 
 class SortLargeFile {
   private:
