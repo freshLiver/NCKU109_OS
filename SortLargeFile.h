@@ -14,7 +14,7 @@ typedef long long LL;
 #define APPEND_MODE 2
 #define SPLIT_MODE 1
 #define MERGE_MODE 0
-#define NOT_DEBUG_MODE false
+#define NOT_DEBUG_MODE true
 
 class SortLargeFile {
   private:

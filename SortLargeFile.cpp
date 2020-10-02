@@ -51,7 +51,7 @@ FILE *SortLargeFile::GetOutputFile ( short mode, char *filename ) {
         sprintf ( filename, "%s/outputs/merged%d", this->destDir, this->merged_counter );
 
     // w mode if SPLIT_MODE
-    printf("Mode [%.2d] GetOutputFile : %s \n", mode ,filename);
+    printf(">> Mode [%.2d] GetOutputFile : %s \n", mode ,filename);
     return fopen ( filename, ( ( ( mode == SPLIT_MODE ) && NOT_DEBUG_MODE ) ? "w" : "a" ) );
 }
 
