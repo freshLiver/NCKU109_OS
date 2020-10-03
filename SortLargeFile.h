@@ -2,9 +2,9 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
-#include <iostream>
 #include <queue>
 #include <string>
+
 
 using std::queue;
 using std::string;
@@ -18,7 +18,6 @@ typedef long long LL;
 #define BUF_SIZE__MBs 3
 
 #define LOG( ... ) printf ( __VA_ARGS__ )
-#define TimeLog( x ) printf ( ">> cost time : %d\n", x )
 
 class SortLargeFile {
   private:
@@ -28,6 +27,7 @@ class SortLargeFile {
     queue< string > filePool;
 
   public:
+    string outputFile = NULL;
     // contructor
     SortLargeFile ( const char *largeFile, const char *destDir );
 
