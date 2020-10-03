@@ -42,6 +42,6 @@ class SortLargeFile {
     // static methods
     static int *FixedIntArray ( int MBs, LL &maxSize ) {
         maxSize = ( LL ) MBs * 1024 * 1024 / sizeof ( int );
-        new int[maxSize];
+        return new int[maxSize];
     }
 };
