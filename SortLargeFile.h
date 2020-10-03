@@ -27,7 +27,7 @@ class SortLargeFile {
     queue< string > filePool;
 
   public:
-    string outputFile = NULL;
+    string outputFile;
     // contructor
     SortLargeFile ( const char *largeFile, const char *destDir );
 
