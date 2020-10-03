@@ -9,7 +9,7 @@ SortLargeFile::SortLargeFile ( const char *src, const char *dest ) {
     // init datas and buffer
     this->nowBuffSize = 0;
     this->merged_counter = 0;
-    this->buffer = SortLargeFile::FixedIntArray ( 1, maxBuffSize );
+    this->buffer = SortLargeFile::FixedIntArray ( BUF_SIZE__MBs, maxBuffSize );
     LOG ( ">>>> init finished. buffer[%lld] \n", this->maxBuffSize );
 
     // split into sorted small files and add to queue
@@ -24,19 +24,14 @@ SortLargeFile::SortLargeFile ( const char *src, const char *dest ) {
         this->filePool.pop ( );
 
         // merge the two file
-        try {
-            this->merge2sorteds ( src1, src2 );
-        }
-        catch ( const std::exception &e ) {
-            std::cerr << e.what ( ) << '\n';
-        }
+        this->merge2sorteds ( src1, src2 );
 
         // ++counter
         ++this->merged_counter;
     }
 
     // the remains file is the result file
-    LOG ( ">>>>> ALL FINISHED, Result at : %s <<<<<\n", this->filePool.back ( ).c_str ( ) );
+    LOG ( ">>>>> ALL FINISHED, Result at : %s <<<<<\n", this->filePool.front ( ).c_str ( ) );
 }
 
 
@@ -51,7 +46,7 @@ FILE *SortLargeFile::GetOutputFile ( short mode, char *filename ) {
         sprintf ( filename, "%s/outputs/merged%d", this->destDir, this->merged_counter );
 
     // w mode if SPLIT_MODE
-    LOG(">> Mode [%.2d] GetOutputFile : %s \n", mode ,filename);
+    LOG ( ">> Mode [%.2d] GetOutputFile : %s \n", mode, filename );
     return fopen ( filename, ( ( ( mode == SPLIT_MODE ) && NOT_DEBUG_MODE ) ? "w" : "a" ) );
 }
 
@@ -84,6 +79,7 @@ void SortLargeFile::bufout ( short mode ) {
     LOG ( ">>>> bufout finished. pool size : %ld\n", this->filePool.size ( ) );
 
     // close file and reset current buff size
+    fflush ( output );
     fclose ( output );
     this->nowBuffSize = 0;
 }
@@ -109,6 +105,7 @@ void SortLargeFile::split2sorteds ( ) {
 
     // reset current buffer
     this->nowBuffSize = 0;
+    fclose ( dataSet );
 }
 
 
@@ -138,7 +135,7 @@ void SortLargeFile::merge2sorteds ( string src1, string src2 ) {
             LOG ( ">> buf[%.10lld] = %d\n", this->nowBuffSize, this->buffer[this->nowBuffSize] );
 
 
-        // smaller one move to next value
+        // move smaller one' prt to next value
         if ( value1 < value2 )
             res1 = fscanf ( part1, "%d", &value1 );
         else
@@ -147,25 +144,39 @@ void SortLargeFile::merge2sorteds ( string src1, string src2 ) {
 
     // clear buffer and reset current size
     this->bufout ( MERGE_MODE );
-    this->nowBuffSize = 0;
 
     LOG ( ">>>> One File is EOF, append remain values directly \n" );
 
-    // append remain files directly
-    if ( res1 != res2 ) {        // TODO SOME THING WRONG
+    // append remain values from not EOF file
+    if ( EOF != res1 || EOF != res2 ) {        // TODO SOME THING WRONG
         // which has remain nums
         FILE *remain = ( EOF != res1 ) ? part1 : part2;
+
+        // determine filename
         char filename[100];
         FILE *target = this->GetOutputFile ( APPEND_MODE, filename );
 
-        // determine
-        int count = 0;
-        for ( int value; EOF != fscanf ( remain, "%d", &value ); )
+        // the not EOF still hold a value, so do while
+        int count = 0, value = ( EOF != res1 ) ? value1 : value2;
+        do {
             if ( NOT_DEBUG_MODE )
                 fprintf ( target, "%d\n", value );
             else if ( count++ % 100000 == 0 )
                 LOG ( ">> append %.9d directly. \n", value );
+
+        } while ( EOF != fscanf ( remain, "%d", &value ) );
+
+        // push merge result file into file pool
+        string mergeResult ( filename );
+        this->filePool.push ( mergeResult );
+
+        // close file
+        fflush ( target );
+        fclose ( target );
     }
+
+    fclose ( part1 );
+    fclose ( part2 );
 
     LOG ( ">>>> MERGE FINISHED : \n\t%s\n\t%s\n", src1.c_str ( ), src2.c_str ( ) );
 }

@@ -14,10 +14,11 @@ typedef long long LL;
 #define APPEND_MODE 2
 #define SPLIT_MODE 1
 #define MERGE_MODE 0
-#define NOT_DEBUG_MODE false
+#define NOT_DEBUG_MODE true
+#define BUF_SIZE__MBs 3
 
-#define LOG(...) printf(__VA_ARGS__)
-#define TimeLog(x) printf(">> cost time : %d\n",x)
+#define LOG( ... ) printf ( __VA_ARGS__ )
+#define TimeLog( x ) printf ( ">> cost time : %d\n", x )
 
 class SortLargeFile {
   private:
@@ -39,8 +40,8 @@ class SortLargeFile {
 
 
     // static methods
-    static int *FixedIntArray ( int GBs, LL &maxSize ) {
-        maxSize = ( LL ) GBs * 1024 * 1024 * 1024 / sizeof ( int );
+    static int *FixedIntArray ( int MBs, LL &maxSize ) {
+        maxSize = ( LL ) MBs * 1024 * 1024 / sizeof ( int );
         new int[maxSize];
     }
 };
