@@ -2,6 +2,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <iostream>
 #include <queue>
 #include <string>
 
@@ -14,7 +15,7 @@ typedef long long LL;
 #define APPEND_MODE 2
 #define SPLIT_MODE 1
 #define MERGE_MODE 0
-#define BUF_SIZE__MBs 3
+#define BUF_SIZE__MBs 1024
 
 
 class SortLargeFile {
