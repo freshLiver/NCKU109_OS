@@ -138,10 +138,10 @@ void SortLargeFile::merge2sorteds ( string src1, string src2 ) {
         FILE *target = this->GetOutputFile ( APPEND_MODE, filename );
 
         // the not EOF still hold a value, so do while
-        int count = 0, value = ( EOF != res1 ) ? value1 : value2;
-        do {
+        int value = ( EOF != res1 ) ? value1 : value2;
+        do
             fprintf ( target, "%d\n", value );
-        } while ( EOF != fscanf ( remain, "%d", &value ) );
+        while ( EOF != fscanf ( remain, "%d", &value ) );
 
         // push merge result file into file pool
         string mergeResult ( filename );
