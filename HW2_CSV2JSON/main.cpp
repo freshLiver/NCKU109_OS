@@ -1,4 +1,4 @@
-#include "CVS2JSON.h"
+#include "CSV2JSON.h"
 #include <fstream>
 
 using std::ifstream;
@@ -19,10 +19,10 @@ int main ( int argc, char const *argv[] ) {
     // get every line
     int count = 0;        // TODO: MAX LINES ?
     for ( string tmp; std::getline ( input, tmp ); ++count )
-        CVS2JSON::datas.push ( pair< int, string > ( count, tmp ) );
+        CSV2JSON::datas.push ( pair< int, string > ( count, tmp ) );
 
     // build class
-    CVS2JSON cvs2json ( count, threads );
+    CSV2JSON cvs2json ( count, threads );
 
     // 
 

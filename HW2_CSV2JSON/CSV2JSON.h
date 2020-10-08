@@ -26,14 +26,14 @@ typedef struct KVS {
 
 
 // main class
-class CVS2JSON {
+class CSV2JSON {
   public:
     static int lines;
     static short threads;
     static pKeyValues kvs;
     static queue< pair< int, string > > datas;
 
-    CVS2JSON ( int totalLines, short threads );
+    CSV2JSON ( int totalLines, short threads );
     static void ParseRawDatas ( );
 
   private:
