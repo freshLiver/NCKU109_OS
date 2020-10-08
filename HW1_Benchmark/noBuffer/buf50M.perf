@@ -1,0 +1,24 @@
+
+freshliver@freshLiver-Unity:~/Dropbox/Programming/C_CPP/OS/HW1_Benchmark/noBuffer (*)
+> sudo perf stat --repeat 5 ./buffer > buf50M.perf                                                             noBuf [5895378] untracked
+[sudo] freshliver 的密碼： 
+
+cost time : 11 s.
+cost time : 12 s.
+cost time : 11 s.
+cost time : 13 s.
+cost time : 13 s.
+
+
+ Performance counter stats for './buffer' (5 runs):
+
+         11,953.04 msec task-clock                #    0.999 CPUs utilized            ( +-  3.61% )
+               160      context-switches          #    0.013 K/sec                    ( +- 57.25% )
+                 5      cpu-migrations            #    0.000 K/sec                    ( +- 17.92% )
+             9,885      page-faults               #    0.827 K/sec                    ( +-  0.01% )
+    36,806,090,031      cycles                    #    3.079 GHz                      ( +-  0.77% )
+    89,887,016,521      instructions              #    2.44  insn per cycle           ( +-  0.00% )
+    18,757,542,491      branches                  # 1569.270 M/sec                    ( +-  0.00% )
+       106,522,813      branch-misses             #    0.57% of all branches          ( +-  0.02% )
+
+            11.962 +- 0.429 seconds time elapsed  ( +-  3.59% )
