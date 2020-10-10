@@ -12,7 +12,7 @@ CSV2JSON::CSV2JSON ( string input, string output, uint workers ) {
     CSV2JSON::queues = new queue< pair< uint, string > >[workers];
 
     // read whole CSV and store queues
-    CSV2JSON::ReadCSV ( input, workers );
+    CSV2JSON::lines = CSV2JSON::ReadCSV ( input, workers );
 
     // dynamic alloc result list
     CSV2JSON::cells = new string[CSV2JSON::lines];
@@ -34,6 +34,11 @@ CSV2JSON::CSV2JSON ( string input, string output, uint workers ) {
     DEBUG ( "Threading Parse End %s", "<<<<" );
 
     // TODO Write into JSON
+    FILE *out = fopen(output.c_str(),"w");
+    for (int i=0;i<CSV2JSON::lines;++i)
+        fprintf(out,"%s",CSV2JSON::cells[i].c_str());
+    fflush(out);
+    fclose(out);
 }
 
 //
