@@ -3,6 +3,8 @@
     "files.associations": {
         "iosfwd": "cpp",
         "fstream": "cpp",
-        "sstream": "cpp"
+        "sstream": "cpp",
+        "future": "cpp",
+        "thread": "cpp"
     }
 }
