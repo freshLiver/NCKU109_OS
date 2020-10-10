@@ -63,7 +63,7 @@ void CSV2JSON::ThreadingParseDatas ( uint worker_id ) {
     }
 }
 //
-//
+// split a string has 20 numbers that split by '|' into string[]
 //
 void CSV2JSON::Split2List ( string raw, string *list ) {
     short start = 0, end = 0, index = 0;
@@ -84,7 +84,7 @@ void CSV2JSON::Split2List ( string raw, string *list ) {
     list[Numpl - 1] = raw.substr ( start, end - start );
 }
 //
-//
+// turn the result of CSV2JSON::Split2List into json format that is defined in "macros.h"
 //
 string CSV2JSON::List2Cell ( string *list ) {
     char cell[550];
