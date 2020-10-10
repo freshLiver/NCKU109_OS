@@ -1,6 +1,8 @@
+#include "macros.h"
 #include <cstdio>
 #include <cstdlib>
-#include <future>
+#include <ctime>
+#include <fstream>
 #include <queue>
 #include <string>
 #include <thread>
@@ -10,52 +12,56 @@ using std::pair;
 using std::queue;
 using std::string;
 using std::thread;
-using std::async;
-using std::future;
 
-#define SINGLE_MODE 0
+#define SINGLE_THREAD 1
+#define Numpl 20        // numbers per line
 
-// debug macros
-#define DEBUG( format, ... ) printf ( "DEBUG >> " format "\n", __VA_ARGS__ )
-#define COST_TIME( str ) DEBUG ( "%s cost : %lu secs.", str, time ( NULL ) - start )
-#define RESET_TIME( ) start = time ( NULL )
-
-// result cells
-typedef struct VALUES {
-    int values[20];
-
-    VALUES ( ) {}
-    VALUES ( int *value ) {
-        for ( int i = 0; i < 20; ++i )
-            values[i] = value[i];
-    }
-
-} Values, *pValues;
 
 
 // main class
 class CSV2JSON {
-  public:
-    static int lines;
-    static short threads;
+public:
+    static uint lines;
+    static uint workers;
 
-    static pValues results;
-    static queue< pair< int, string > > datas;
+    static string *cells;
+    static queue< pair< uint, string > > *queues;
 
     // CTOR
-    CSV2JSON ( int totalLines, short threads );
+    CSV2JSON ( string input, string output, uint workers );
 
-    // parse line and store values
-    static void ParseLineStoreValues ( );
 
-  private:
-    // async get data for thread safety
-    static pair< int, string > AsyncPopQueue ( ) {
-        // get front data and pop it
-        pair< int, string > data = CSV2JSON::datas.front ( );
-        CSV2JSON::datas.pop ( );
 
-        // return front data
-        return data;
+private:
+    //
+    // Read csv file and push to target queues, return total lines
+    //
+    static uint ReadCSV ( string input, uint n ) {
+        // open file
+        std::ifstream fin ( input.c_str ( ), std::ios::in );
+
+        // read until EOF
+        uint count = 0;
+        for ( string tmp; std::getline ( fin, tmp ); ++count ) {
+            // push to which queue ?
+            uint target = ( n == 1 ) ? 1 : count % n;
+            CSV2JSON::queues[target].push ( pair< uint, string > ( count, tmp ) );
+        }
+
+        // close file and return total lines
+        fin.close ( );
+        return count;
     }
+    //
+    // parse line and store values
+    //
+    static void ThreadingParseDatas ( uint worker_id );
+    //
+    //
+    //
+    static void Split2List ( string raw, string *list );
+    //
+    //
+    //
+    static string List2Cell ( string *list );
 };

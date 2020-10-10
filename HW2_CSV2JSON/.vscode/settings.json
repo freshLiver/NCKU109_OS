@@ -5,6 +5,7 @@
         "fstream": "cpp",
         "sstream": "cpp",
         "future": "cpp",
-        "thread": "cpp"
+        "thread": "cpp",
+        "string": "cpp"
     }
 }

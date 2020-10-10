@@ -1,56 +1,88 @@
 #include "CSV2JSON.h"
 
-// CTOR
+uint CSV2JSON::workers;
+uint CSV2JSON::lines;
+string *CSV2JSON::cells;
+queue< pair< uint, string > > *CSV2JSON::queues;
 
-CSV2JSON::CSV2JSON ( int totalLines, short threads ) {
-    // set total cvs lines and multi-thread mode
-    CSV2JSON::lines = totalLines;
-    CSV2JSON::threads = threads;
 
-    // create $(lines) cells to store result
-    CSV2JSON::results = new Values[totalLines];
+CSV2JSON::CSV2JSON ( string input, string output, uint workers ) {
+    // how many workers
+    CSV2JSON::workers = workers;
+    CSV2JSON::queues = new queue< pair< uint, string > >[workers];
+
+    // read whole CSV and store queues
+    CSV2JSON::ReadCSV ( input, workers );
+
+    // dynamic alloc result list
+    CSV2JSON::cells = new string[CSV2JSON::lines];
+
+    // ! Threading Parse Datas
+    if ( workers == SINGLE_THREAD ) {
+        CSV2JSON::ThreadingParseDatas ( 0 );
+    }
+    else {
+        // create workers and assign task
+        thread ths[workers];
+        for ( int i = 0; i < workers; ++i )
+            ths[i] = thread ( CSV2JSON::ThreadingParseDatas, i );
+
+        // wait all worker
+        for ( int i = 0; i < workers; ++i )
+            ths[i].join ( );
+    }
+    DEBUG ( "Threading Parse End %s", "<<<<" );
+
+    // TODO Write into JSON
 }
 
-// methods
-void CSV2JSON::ParseLineStoreValues ( ) {
-    // async get foront data in raw data queue
-    future< pair< int, string > > data = async ( CSV2JSON::AsyncPopQueue );
+//
+// parse line and store values
+//
+void CSV2JSON::ThreadingParseDatas ( uint worker_id ) {
+    // get target queue (based on worker_id)
+    queue< pair< uint, string > > *myqueue = &CSV2JSON::queues[worker_id];
 
-    int key = data.get ( ).first;
-    string str = data.get ( ).second;
+    // ! do unil target queue
+    while ( myqueue->empty ( ) == false ) {
+        // get front data (line) in target queue and pop it
+        pair< uint, string > kv = myqueue->front ( );
+        myqueue->pop ( );
 
+        // split 2 string list
+        string list[Numpl];
+        Split2List ( kv.second, list );
 
-    // TODO HANDLE THIS DATA
-    int values[20];
-
-    // start from str end, find all digit and minus symbol
-    for ( int p = str.length ( ) - 1, index = 19, weight = 1; p >= 0; --p ) {
-        // move to next index and reset weight to 1
-        if ( str[p] == '|' ) {
-            weight = 1;
-            --index;
-        }
-
-        // char to int, * weight
-        else if ( '0' <= str[p] && str[p] <= '9' ) {
-            values[index] += weight * ( str[p] - '0' );
-            weight *= 10;
-        }
-
-        // value * -1
-        else if ( str[p] == '-' )
-            values[index] *= -1;
-
-        // should not have other char
-        else
-            DEBUG ( "find >>%c<<", str[p] );
+        // string to formated json cell
+        CSV2JSON::cells[kv.first] = CSV2JSON::List2Cell ( list );
     }
-
-    // TODO DEBUG
-    DEBUG ( "[%d] : %s", key, str.c_str ( ) );
-    for ( int i = 0; i < 20; ++i )
-        printf ( "%d|", values[i] );
-
-    // STORE INTO CORRESPONDING POS IN CSV2JSON::results
-    CSV2JSON::results[key] = Values ( values );
+}
+//
+//
+//
+void CSV2JSON::Split2List ( string raw, string *list ) {
+    short start = 0, end = 0, index = 0;
+    for ( ; end < raw.length ( ); ++end ) {
+        // '0' ~ '9' or '-'
+        if ( raw[end] != '|' && raw[end] != '\0' )
+            continue;
+        // '|' or '\0' : number end, raw[start:i] is this number
+        else {
+            // get this number
+            list[index] = raw.substr ( start, end - start );
+            // set start and move to next list element
+            ++index;
+            start = end + 1;
+        }
+    }
+    // get last number
+    list[Numpl - 1] = raw.substr ( start, end - start );
+}
+//
+//
+//
+string CSV2JSON::List2Cell ( string *list ) {
+    char cell[550];
+    sprintf ( cell, SUPER_BRUTE_FORCE_JSON_FORMAT, SUPER_BRUTE_FORCE_FORMAT_PARAMS );
+    return cell;
 }
