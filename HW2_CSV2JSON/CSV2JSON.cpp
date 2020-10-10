@@ -54,7 +54,7 @@ void CSV2JSON::ThreadingParseDatas ( uint worker_id ) {
         Split2List ( kv.second, list );
 
         // string to formated json cell
-        CSV2JSON::cells[kv.first] = CSV2JSON::List2Cell ( list );
+        CSV2JSON::cells[kv.first].assign( CSV2JSON::List2Cell ( list ) );
     }
 }
 //

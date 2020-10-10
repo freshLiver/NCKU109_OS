@@ -44,7 +44,7 @@ private:
         uint count = 0;
         for ( string tmp; std::getline ( fin, tmp ); ++count ) {
             // push to which queue ?
-            uint target = ( n == 1 ) ? 1 : count % n;
+            uint target = ( n == 1 ) ? 0 : count % n;
             CSV2JSON::queues[target].push ( pair< uint, string > ( count, tmp ) );
         }
 
