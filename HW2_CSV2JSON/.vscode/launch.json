@@ -10,7 +10,7 @@
             "request": "launch",
             "program": "${fileDirname}/a.out",
             "args": [
-                "input.csv"
+                "~/Tmp/input.csv"
             ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",

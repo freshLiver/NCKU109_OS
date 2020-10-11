@@ -1,6 +1,6 @@
 #include "CSV2JSON.h"
 
-#define OUTPUT_PATH "./output"
+#define OUTPUT_PATH "~/Tmp/output.json"
 
 typedef unsigned int uint;
 
