@@ -1,6 +1,6 @@
 #include "CSV2JSON.h"
 
-#define OUTPUT_PATH "~/Tmp/output.json"
+#define OUTPUT_PATH "/home/freshliver/Tmp/output.json"
 
 typedef unsigned int uint;
 
@@ -43,10 +43,10 @@ int main ( int argc, char const *argv[] ) {
 
     DEBUG ( "input file : %s", input.c_str ( ) );
     DEBUG ( "threads    : %d", threads );
-    DEBUG ( "input file : %s", output.c_str ( ) );
+    DEBUG ( "output file : %s", output.c_str ( ) );
 
     // read and initialize class with datas and threads
-    CSV2JSON cvs2json ( input, output, (threads == 1) ? 1 : ( threads - 1 ) );
+    CSV2JSON cvs2json ( input, output, ( threads == 1 ) ? 1 : ( threads - 1 ) );
 
 
     return 0;

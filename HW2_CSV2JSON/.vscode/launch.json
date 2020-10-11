@@ -10,7 +10,8 @@
             "request": "launch",
             "program": "${fileDirname}/a.out",
             "args": [
-                "~/Tmp/input.csv"
+                "/home/freshliver/Tmp/input.csv",
+                "4"
             ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",

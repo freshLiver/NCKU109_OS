@@ -34,11 +34,11 @@ CSV2JSON::CSV2JSON ( string input, string output, uint workers ) {
     DEBUG ( "Threading Parse End %s", "<<<<" );
 
     // TODO Write into JSON
-    FILE *out = fopen(output.c_str(),"w");
-    for (int i=0;i<CSV2JSON::lines;++i)
-        fprintf(out,"%s",CSV2JSON::cells[i].c_str());
-    fflush(out);
-    fclose(out);
+    FILE *out = fopen ( output.c_str ( ), "w" );
+    for ( int i = 0; i < CSV2JSON::lines; ++i )
+        fprintf ( out, "%s", CSV2JSON::cells[i].c_str ( ) );
+    fflush ( out );
+    fclose ( out );
 }
 
 //
@@ -59,7 +59,7 @@ void CSV2JSON::ThreadingParseDatas ( uint worker_id ) {
         Split2List ( kv.second, list );
 
         // string to formated json cell
-        CSV2JSON::cells[kv.first].assign( CSV2JSON::List2Cell ( list ) );
+        CSV2JSON::cells[kv.first].assign ( CSV2JSON::List2Cell ( list ) );
     }
 }
 //
