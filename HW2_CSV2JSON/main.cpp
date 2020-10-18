@@ -40,14 +40,12 @@ int main ( int argc, char const *argv[] ) {
 
     uint threads = c_str2int ( argv[2] );
 
-
-    DEBUG ( "input file : %s", input.c_str ( ) );
-    DEBUG ( "threads    : %d", threads );
-    DEBUG ( "output file : %s", output.c_str ( ) );
+    DEBUG ( "I/O Path : %s -> %s", input.c_str ( ), output.c_str ( ) );
+    DEBUG ( "threads  : %d", threads );
 
     // read and initialize class with datas and threads
     CSV2JSON cvs2json ( input, output, ( threads == 1 ) ? 1 : ( threads - 1 ) );
-
+    COST_TIME ( "csv2json total cost :" );
 
     return 0;
 }

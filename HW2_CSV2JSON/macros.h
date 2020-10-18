@@ -11,33 +11,33 @@
 
 #define SUPER_BRUTE_FORCE_JSON_FORMAT \
 "{\n" \
-INDENT "\"col_1\":%s,\n"    \
-INDENT "\"col_2\":%s,\n"    \
-INDENT "\"col_3\":%s,\n"    \
-INDENT "\"col_4\":%s,\n"    \
-INDENT "\"col_5\":%s,\n"    \
-INDENT "\"col_6\":%s,\n"    \
-INDENT "\"col_7\":%s,\n"    \
-INDENT "\"col_8\":%s,\n"    \
-INDENT "\"col_9\":%s,\n"    \
-INDENT "\"col_10\":%s,\n"   \
-INDENT "\"col_11\":%s,\n"   \
-INDENT "\"col_12\":%s,\n"   \
-INDENT "\"col_13\":%s,\n"   \
-INDENT "\"col_14\":%s,\n"   \
-INDENT "\"col_15\":%s,\n"   \
-INDENT "\"col_16\":%s,\n"   \
-INDENT "\"col_17\":%s,\n"   \
-INDENT "\"col_18\":%s,\n"   \
-INDENT "\"col_19\":%s,\n"   \
-INDENT "\"col_20\":%s\n"    \
-"},\n"
+"\"col_1\":%s,\n"    \
+"\"col_2\":%s,\n"    \
+"\"col_3\":%s,\n"    \
+"\"col_4\":%s,\n"    \
+"\"col_5\":%s,\n"    \
+"\"col_6\":%s,\n"    \
+"\"col_7\":%s,\n"    \
+"\"col_8\":%s,\n"    \
+"\"col_9\":%s,\n"    \
+"\"col_10\":%s,\n"   \
+"\"col_11\":%s,\n"   \
+"\"col_12\":%s,\n"   \
+"\"col_13\":%s,\n"   \
+"\"col_14\":%s,\n"   \
+"\"col_15\":%s,\n"   \
+"\"col_16\":%s,\n"   \
+"\"col_17\":%s,\n"   \
+"\"col_18\":%s,\n"   \
+"\"col_19\":%s,\n"   \
+"\"col_20\":%s\n"    \
+"}"
 
 /**
  *  if use this macro
- *  every line is regex: INDENT"col_\d{1,2}":-?\d{1,10},\n
- *  so, at most needs : xxxx"col_xx":-1234567890,\n ==> 26 chars evey line
- *  and there are 20 elements, so we need char[520] for each cell ==> char[550]
+ *  every line is regex: "col_\d{1,2}":-?\d{1,10},\n
+ *  so, at most needs : "col_xx":-1234567890,\n ==> 22 chars evey line
+ *  and there are 20 elements, so we need char[440] for each cell ==> char[450]
  * */
 
 
