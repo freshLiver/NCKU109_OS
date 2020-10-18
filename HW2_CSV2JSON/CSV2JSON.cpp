@@ -1,4 +1,5 @@
 #include "CSV2JSON.h"
+#include <unistd.h>
 
 uint CSV2JSON::workers;
 uint CSV2JSON::lines;
@@ -13,6 +14,12 @@ CSV2JSON::CSV2JSON ( string input, string output, uint workers ) {
 
     // read whole CSV and store queues
     CSV2JSON::lines = CSV2JSON::ReadCSV ( input, workers );
+    
+    int sleep_interval;
+    
+    sleep_interval = 5; 
+    DEBUG ( "sleep %d secs before Parse Stage", sleep_interval );
+    sleep(sleep_interval);
 
     // dynamic alloc result list
     CSV2JSON::cells = new string[CSV2JSON::lines];
@@ -32,6 +39,9 @@ CSV2JSON::CSV2JSON ( string input, string output, uint workers ) {
             ths[i].join ( );
     }
     DEBUG ( "Threading Parse End %s", "<<<<" );
+    
+    DEBUG ( "sleep %d secs before Write Stage", sleep_interval );
+    sleep(sleep_interval);
 
     // TODO Write into JSON
     FILE *out = fopen ( output.c_str ( ), "w" );
