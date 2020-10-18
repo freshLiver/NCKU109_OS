@@ -57,11 +57,25 @@ private:
     //
     static void ThreadingParseDatas ( uint worker_id );
     //
-    //
+    // split a string has 20 numbers that split by '|' into string[]
     //
     static void Split2List ( string raw, string *list );
     //
-    //
+    // turn the result of CSV2JSON::Split2List into json format that is defined in "macros.h"
     //
     static string List2Cell ( string *list );
+    //
+    // sequentially write string array to output file
+    //
+    static void WriteJSON ( string output ) {
+        FILE *fout = fopen ( output.c_str ( ), "w" );
+
+        fprintf ( fout, "[\n" );
+        for ( int i = 0; i < CSV2JSON::lines - 1; ++i )
+            fprintf ( fout, "%s,\n", CSV2JSON::cells[i].c_str ( ) );
+        fprintf ( fout, "%s\n]", CSV2JSON::cells[CSV2JSON::lines - 1].c_str ( ) );
+
+        fflush ( fout );
+        fclose ( fout );
+    }
 };

@@ -11,7 +11,7 @@ CSV2JSON::CSV2JSON ( string input, string output, uint workers ) {
     CSV2JSON::workers = workers;
     CSV2JSON::queues = new queue< pair< uint, string > >[workers];
 
-    // read whole CSV and store queues
+    // ! read whole CSV and store queues
     CSV2JSON::lines = CSV2JSON::ReadCSV ( input, workers );
 
     // dynamic alloc result list
@@ -33,12 +33,7 @@ CSV2JSON::CSV2JSON ( string input, string output, uint workers ) {
     }
     DEBUG ( "Threading Parse End %s", "<<<<" );
 
-    // TODO Write into JSON
-    FILE *out = fopen ( output.c_str ( ), "w" );
-    for ( int i = 0; i < CSV2JSON::lines; ++i )
-        fprintf ( out, "%s", CSV2JSON::cells[i].c_str ( ) );
-    fflush ( out );
-    fclose ( out );
+    CSV2JSON::WriteJSON ( output );
 }
 
 //
@@ -87,7 +82,7 @@ void CSV2JSON::Split2List ( string raw, string *list ) {
 // turn the result of CSV2JSON::Split2List into json format that is defined in "macros.h"
 //
 string CSV2JSON::List2Cell ( string *list ) {
-    char cell[550];
+    char cell[450];
     sprintf ( cell, SUPER_BRUTE_FORCE_JSON_FORMAT, SUPER_BRUTE_FORCE_FORMAT_PARAMS );
     return cell;
 }

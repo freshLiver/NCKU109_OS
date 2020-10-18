@@ -26,6 +26,7 @@ int main ( int argc, char const *argv[] ) {
         fprintf ( fout, "%s", results[i].c_str() );
     fflush ( fout );
     fclose ( fout );
+    
 
     printf ( "%d cells cost : %lf \n", size, ( double ) ( clock ( ) - start ) );
     return 0;
