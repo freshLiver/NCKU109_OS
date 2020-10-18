@@ -20,6 +20,7 @@ CSV2JSON::CSV2JSON ( string input, string output, uint workers ) {
     sleep_interval = 5; 
     DEBUG ( "sleep %d secs before Parse Stage", sleep_interval );
     sleep(sleep_interval);
+    DEBUG ( "Start %s Stage", "Parse" );
 
     // dynamic alloc result list
     CSV2JSON::cells = new string[CSV2JSON::lines];
@@ -42,6 +43,7 @@ CSV2JSON::CSV2JSON ( string input, string output, uint workers ) {
     
     DEBUG ( "sleep %d secs before Write Stage", sleep_interval );
     sleep(sleep_interval);
+    DEBUG ( "Start %s Stage", "Write" );
 
     CSV2JSON::WriteJSON ( output );
 }
