@@ -1,6 +1,7 @@
 #include "CSV2JSON.h"
 
-#define OUTPUT_PATH "/home/freshliver/Tmp/output.json"
+#define INPUT_PATH "input.csv"
+#define OUTPUT_PATH "output.json"
 
 typedef unsigned int uint;
 
@@ -35,10 +36,10 @@ int main ( int argc, char const *argv[] ) {
      *  @ argv[2] : number of threads
      * */
 
-    string input ( argv[1] );
+    string input ( INPUT_PATH );
     string output ( OUTPUT_PATH );
 
-    uint threads = c_str2int ( argv[2] );
+    uint threads = c_str2int ( argv[1] );
 
     DEBUG ( "I/O Path : %s -> %s", input.c_str ( ), output.c_str ( ) );
     DEBUG ( "threads  : %d", threads );
