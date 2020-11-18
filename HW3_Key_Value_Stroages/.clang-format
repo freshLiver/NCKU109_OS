@@ -1,0 +1,86 @@
+# Official Document Website
+# http://clang.llvm.org/docs/ClangFormatStyleOptions.html
+
+---
+BasedOnStyle: LLVM
+IndentWidth: 4
+SpacesInCStyleCastParentheses: true
+ColumnLimit: 100
+MaxEmptyLinesToKeep: 5
+
+# AlignConsecutiveMacros: true # not work
+
+## --------BRACE SETTINGS-------- ##
+
+# space in empty brace
+SpaceInEmptyParentheses: true
+
+# space before braces and after left brace
+SpaceBeforeParens: Always
+SpacesInParentheses: true
+
+
+BinPackParameters: false
+BinPackArguments: false
+# AllowAllArgumentsOnNextLine: false
+AllowAllParametersOfDeclarationOnNextLine: false
+
+# BreakStringLiterals: true
+BreakBeforeBinaryOperators: None
+AlwaysBreakBeforeMultilineStrings: false
+
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterEnum: true
+  AfterStruct: false
+  BeforeCatch: true
+  BeforeElse: true
+
+# space in angle
+SpacesInAngles: true
+
+# space after > and ) in casting
+SpaceAfterCStyleCast: true
+
+# space before left angle of template 
+# SpaceAfterTemplateKeyword: true
+
+## --------INDENT SETTINGS-------- ##
+
+# private, public, protected IndentWidth
+AccessModifierOffset:	-4
+
+# indent case: label in switch
+IndentCaseLabels: true
+
+# x
+
+
+## --------COMMENT SETTINGS-------- ##
+
+# put n spaces before comments 
+SpacesBeforeTrailingComments: 8
+
+# align trailing comments
+AlignTrailingComments: true
+SpaceBeforeAssignmentOperators: true
+
+# allow reflow comments
+ReflowComments: true
+
+# Allign arguments 
+AlignAfterOpenBracket: Align
+---
+Language: Cpp
+PointerAlignment: Right
+
+
+## -----------------------------CPP SETTING END ----------------------------- ##
+
+---
+Language: Java
+---
+
+
+
+## -----------------------------JAVA SETTING END ----------------------------- ##
