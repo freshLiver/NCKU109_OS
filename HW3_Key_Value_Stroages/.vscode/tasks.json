@@ -1,0 +1,30 @@
+{
+    "tasks": [
+        {
+            "type": "cppbuild",
+            "label": "hw3example",
+            "command": "/usr/bin/g++",
+            "args": [
+                "-g",
+                "-pthread",
+                "-std=c++14",
+                "${fileDirname}/main.cpp",
+                "${fileDirname}/KeyValueStorage.cpp",
+                "-o",
+                "${fileDirname}/main.out",
+            ],
+            "options": {
+                "cwd": "/usr/bin"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "detail": "Generated task by Debugger"
+        }
+    ],
+    "version": "2.0.0"
+}
