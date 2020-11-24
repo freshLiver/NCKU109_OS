@@ -37,7 +37,7 @@ BraceWrapping:
   BeforeElse: true
 
 # space in angle
-SpacesInAngles: true
+SpacesInAngles: false
 
 # space after > and ) in casting
 SpaceAfterCStyleCast: true
