@@ -3,7 +3,6 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
-#include <ctime>
 #include <exception>
 #include <fstream>
 #include <queue>
@@ -12,13 +11,42 @@
 #include <tuple>
 
 using std::fstream;
+using std::get;
 using std::queue;
 using std::string;
 using std::thread;
 using std::tuple;
-using std::get;
 
 class KeyValueStorage {
+
+public:
+    //
+    static thread dbWorkers[10];
+    static queue<tuple<LL, string>> putCommands[10];
+
+    //
+    // ctor :
+    //
+    KeyValueStorage ( string input, string output );
+    //
+    // Read Input File
+    //
+    static void ReadInputFile ( string input ) {
+        std::ifstream fin ( input.c_str ( ), std::ios::in );
+        int count = 1;
+        // TODO: Read N lines once, until EOF
+        for ( string tmp; std::getline ( fin, tmp ); ++count ) {
+            int type, index;
+            string key, value;
+            auto res = ParseCommand ( tmp );
+            DEBUG ( "line[%3d](%d) :\n\tkey: %s\n\tvalue: %s\n",
+                    count,
+                    get<0> ( res ),
+                    get<1> ( res ).c_str ( ),
+                    get<2> ( res ).c_str ( ) );
+        }
+    }
+
 private:
     static int GetKeyFromCmd ( string &cmd, string &key, int start, char delim ) {
         for ( int iCmd = start, iKey = 0;; ++iCmd, ++iKey ) {
@@ -57,32 +85,6 @@ private:
                 break;
         }
         return std::make_tuple ( key, value );
-    }
-
-public:
-    //
-    // thread putThreads[10];
-    // queue< tuple< LL, char[128] > > putCommands[10];
-    KeyValueStorage ( string input );
-
-
-    //
-    // Read Input File
-    // TODO: Read N lines once, until EOF
-    //
-    static void ReadInputFile ( string input ) {
-        std::ifstream fin ( input.c_str ( ), std::ios::in );
-        int count = 1;
-        for ( string tmp; std::getline ( fin, tmp ); ++count ) {
-            int type, index;
-            string key, value;
-            auto res = ParseCommand ( tmp );
-            DEBUG ( "line[%3d](%d) :\n\tkey: %s\n\tvalue: %s\n",
-                    count,
-                    get<0> ( res ),
-                    get<1> ( res ).c_str ( ),
-                    get<2> ( res ).c_str ( ) );
-        }
     }
     //
     // Parse This Command, and return its informations
