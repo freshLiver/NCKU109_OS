@@ -1,5 +1,5 @@
-#if !defined( FileIO_h )
-#define FileIO_h
+#if !defined( DBIO_h )
+#define DBIO_h
 
 #include <fstream>
 #include <string>
