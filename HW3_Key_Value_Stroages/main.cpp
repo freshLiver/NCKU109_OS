@@ -4,16 +4,16 @@
 //
 // Convert input file name to output file name by change .input -> .output
 //
-string GetOutputName ( string inputName ) {
-    string res ( inputName.size ( ) + 1, '\0' );
-    int dotEnd = inputName.size ( ) - 5;
+string GetOutputName( string inputName ) {
+    string res( inputName.size() + 1, '\0' );
+    int dotEnd = inputName.size() - 5;
 
     // copy string before "input"
     for ( int i = 0; i < dotEnd; ++i )
         res[i] = inputName[i];
 
     // copy ".input" and right shift 1 char
-    for ( int i = dotEnd; i < res.size ( ); ++i )
+    for ( int i = dotEnd; i < res.size(); ++i )
         res[i] = inputName[i - 1];
 
     // .in -> out
@@ -26,22 +26,22 @@ string GetOutputName ( string inputName ) {
 //
 // MAIN, input format is : ./executable ./inputfile.input
 //
-int main ( int argc, char const *argv[] ) {
+int main( int argc, char const *argv[] ) {
     time_t start, finish;
 
     // start counting time
-    start = time ( NULL );
+    start = time( NULL );
 
     // get input and output file name with ext as std::string
-    string inputFilename ( argv[1] );
-    string outputFileName ( GetOutputName ( inputFilename ) );
+    string inputFilename( argv[1] );
+    string outputFileName( GetOutputName( inputFilename ) );
 
     // pass input and output to KVS instance
-    KeyValueStorage ( inputFilename, outputFileName );
+    KeyValueStorage( inputFilename, outputFileName );
 
     // get finish time, and calc time cost
-    finish = time ( NULL );
-    printf ( "Total Time Cost : %ld secs.\n", finish - start );
+    finish = time( NULL );
+    printf( "Total Time Cost : %ld secs.\n", finish - start );
 
     return 0;
 }

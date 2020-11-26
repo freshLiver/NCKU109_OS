@@ -5,7 +5,7 @@
 BasedOnStyle: LLVM
 IndentWidth: 4
 SpacesInCStyleCastParentheses: true
-ColumnLimit: 100
+ColumnLimit: 120
 MaxEmptyLinesToKeep: 5
 
 # AlignConsecutiveMacros: true # not work
@@ -13,10 +13,10 @@ MaxEmptyLinesToKeep: 5
 ## --------BRACE SETTINGS-------- ##
 
 # space in empty brace
-SpaceInEmptyParentheses: true
+SpaceInEmptyParentheses: false
 
 # space before braces and after left brace
-SpaceBeforeParens: Always
+SpaceBeforeParens: ControlStatements
 SpacesInParentheses: true
 
 
