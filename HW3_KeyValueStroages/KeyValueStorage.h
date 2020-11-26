@@ -19,7 +19,7 @@ using std::tuple;
 
 class KeyValueStorage {
 
-public:
+  public:
     //
     // ctor :
     // * 1. get input and output file name
@@ -36,7 +36,7 @@ public:
     //
     static void ParseOnReading();
 
-private:
+  private:
     //
     static string inputFile, outputFile;
     static thread dbWorkers[10];

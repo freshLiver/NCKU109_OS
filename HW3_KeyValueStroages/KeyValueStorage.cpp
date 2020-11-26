@@ -45,7 +45,7 @@ void KeyValueStorage::ParseOnReading( queue<string> &cmdQueue, bool &stop, bool 
             string cmd = cmdQueue.front();
             cmdQueue.pop();
 
-            // parse this cmd and get cmd info 
+            // parse this cmd and get cmd info
             auto res = KeyValueStorage::ParseCommand( cmd );
             CmdType type = get<CType>( res );
             string key = get<1>( res ), value_key2 = get<2>( res );
@@ -55,11 +55,9 @@ void KeyValueStorage::ParseOnReading( queue<string> &cmdQueue, bool &stop, bool 
                 int worker = key.back() - '0';
                 KeyValueStorage::workerCmds[worker].push( make_tuple( key, value_key2 ) );
             }
-            // if SCAN or GET, 
+            // if SCAN or GET,
             else {
-
             }
-            
         }
     }
 }

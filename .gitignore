@@ -1,3 +1,15 @@
-**/*.out
+# Ignore all
+*
+# Unignore all with extensions
+!*.*
+# Unignore all dirs
+!*/
+
+**/*.db
+
 **/*.o
+**/*.out
+**/*.output*
+**/*.input*
+
 

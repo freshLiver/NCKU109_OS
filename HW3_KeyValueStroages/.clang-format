@@ -25,7 +25,7 @@ BinPackArguments: false
 # AllowAllArgumentsOnNextLine: false
 AllowAllParametersOfDeclarationOnNextLine: false
 
-# BreakStringLiterals: true
+BreakStringLiterals: true
 BreakBeforeBinaryOperators: None
 AlwaysBreakBeforeMultilineStrings: false
 
@@ -43,18 +43,15 @@ SpacesInAngles: false
 SpaceAfterCStyleCast: true
 
 # space before left angle of template 
-# SpaceAfterTemplateKeyword: true
+SpaceAfterTemplateKeyword: true
 
 ## --------INDENT SETTINGS-------- ##
 
 # private, public, protected IndentWidth
-AccessModifierOffset:	-4
+AccessModifierOffset:	-2
 
 # indent case: label in switch
 IndentCaseLabels: true
-
-# x
-
 
 ## --------COMMENT SETTINGS-------- ##
 
@@ -76,11 +73,3 @@ PointerAlignment: Right
 
 
 ## -----------------------------CPP SETTING END ----------------------------- ##
-
----
-Language: Java
----
-
-
-
-## -----------------------------JAVA SETTING END ----------------------------- ##
