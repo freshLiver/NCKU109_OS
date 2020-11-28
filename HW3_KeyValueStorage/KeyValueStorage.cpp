@@ -1,4 +1,5 @@
 #include "KeyValueStorage.h"
+#include "DBIO.h"
 #include <unistd.h>
 
 KeyValueStorage::KeyValueStorage( string input, string output ) {
@@ -6,9 +7,14 @@ KeyValueStorage::KeyValueStorage( string input, string output ) {
     KeyValueStorage::inputFile = input;
     KeyValueStorage::outputFile = output;
 
-    // init every thread and their queue
-    for ( int i = 0; i < 10; ++i ) {
-    }
+    // 檢查是否所有 db 檔案都存在，若不存在就需要建立檔案
+    // ! 必須在 db Worker 以前進行，以免重複開啟檔案
+    DBIO::CheckAllDB();
+
+    // 初始化所有
+    
+    // 開始讀取檔案
+
 }
 
 void KeyValueStorage::ReadCommands() {

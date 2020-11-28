@@ -10,10 +10,9 @@ using std::string;
 using std::tuple;
 
 
-class FileIO {
+class DBIO {
   public:
     /**
-     *
      *
      * @brief 從某個以開啟的檔案中尋找特定 key 值，並且回傳搜尋結果以及該行位置
      *
@@ -22,9 +21,12 @@ class FileIO {
      *
      * @return tuple<bool, long>, 是否找到 key, key 的行結尾位置（含 \\n）
      */
-    static tuple<bool, long> FindKeyLineEndFromDB( string key, fstream &db ) {
-        // 回到檔案開頭
-        db.seekp( 0 );
+    static tuple<bool, long> FindKeyLineEndFrom( fstream &db, string key ) {
+        // 清除 eof flag 並回到檔案開頭
+        db.clear();
+        db.seekg( 0, std::ios::beg );
+
+        // 依據查詢各行
         for ( string tmp; getline( db, tmp ); ) {
             // 比對該行 key
             bool sameKey = true;
@@ -37,8 +39,9 @@ class FileIO {
         }
         return std::make_tuple( false, -1 );
     }
+
+
     /**
-     *
      *
      * @brief 更新 key 對應的 value
      *
@@ -52,8 +55,9 @@ class FileIO {
         // 只更新 value 的 128 個 char, 不更新 \n
         db.write( newValue.c_str(), 128 );
     }
+
+
     /**
-     *
      *
      * @brief 一次從 target 讀取 N 行 string, 若是遇到 EOF 則會提早結束
      *
@@ -70,6 +74,40 @@ class FileIO {
         //
         return target.eof() ? count : -1;
     }
+
+
+    /**
+     *
+     * @brief 給予一檔案路徑，若是檔案不存在則建立一個空的檔案
+     *
+     * @param path 目標檔案路徑
+     */
+    static void CreateFileIfNotExist( const char *path ) {
+        FILE *target;
+        if ( !( target = fopen( path, "r" ) ) )
+            target = fopen( path, "w" );
+        fclose( target );
+        return;
+    }
+
+
+    /**
+     *
+     * @brief 檢查 db 資料夾以下其下的各個 db 檔
+     *
+     */
+    static void CheckAllDB() {
+        // 直接 mkdir
+        system( "mkdir ./db/" );
+        // 檢查所有 db 檔
+        string target = "./db/db0";
+        for ( int i = 0; i < 10; ++i ) {
+            target[target.length() - 1] = '0' + i;
+            CreateFileIfNotExist( target.c_str() );
+        }
+    }
+
+  private:
 };
 
-#endif        // FileIO_h
+#endif        // DBIO_h
