@@ -48,7 +48,7 @@ SpaceAfterTemplateKeyword: true
 ## --------INDENT SETTINGS-------- ##
 
 # private, public, protected IndentWidth
-AccessModifierOffset:	-2
+AccessModifierOffset:	-4
 
 # indent case: label in switch
 IndentCaseLabels: true
