@@ -1,12 +1,13 @@
 #include "DBWorker.h"
 
 
-/*******************************
-******** public methods ********
-*******************************/
+/***********************************************
+**************** public methods ****************
+***********************************************/
 
 
 DBWorker::DBWorker( int id ) {
+
     // 設定 db id
     this->myDBID = id;
 
@@ -19,7 +20,11 @@ DBWorker::DBWorker( int id ) {
 }
 
 
+DBWorker::~DBWorker() { this->myDB.close(); }
+
+
 string DBWorker::GetValueByKey( string key ) {
+
     // 從自己的 db 中搜尋這個 key
     auto result = DBWorker::FindKeyLineEndFrom( this->myDB, key );
 
@@ -33,6 +38,7 @@ string DBWorker::GetValueByKey( string key ) {
 
 
 void DBWorker::UpdateKeyValue( string key, string value ) {
+
     // 從 db 裡搜尋 key
     auto result = DBWorker::FindKeyLineEndFrom( this->myDB, key );
 
@@ -44,6 +50,7 @@ void DBWorker::UpdateKeyValue( string key, string value ) {
         // 用新 value 取代原本的 value
         this->myDB.write( value.c_str(), 128 );
     }
+
     // ! key 不在 db 中 -> Insert new Value
     else {
         // re-open db and change to append mode
@@ -62,21 +69,24 @@ void DBWorker::UpdateKeyValue( string key, string value ) {
         this->myDB.close();
         this->myDB = fstream( this->myDBPath.c_str() );
     }
+    this->myDB.flush();
 }
 
 
-/********************************
-******** private methods ********
-********************************/
+/************************************************
+**************** private methods ****************
+************************************************/
 
 
 tuple<long, string> DBWorker::FindKeyLineEndFrom( fstream &db, string key ) {
+
     // 清除 eof flag 並回到檔案開頭
     db.clear();
     db.seekg( 0, std::ios::beg );
 
     // 依據查詢各行
     for ( string tmp; getline( db, tmp ); ) {
+
         // 比對該行 key
         bool sameKey = true;
         for ( int i = 0; i < key.size() && sameKey; ++i )
@@ -86,14 +96,18 @@ tuple<long, string> DBWorker::FindKeyLineEndFrom( fstream &db, string key ) {
         if ( sameKey )
             return std::make_tuple( db.tellp(), tmp );
     }
+
     return std::make_tuple( -1, "EMPTY" );
 }
 
 
 string DBWorker::GetValueFromKeyLine( string keyLine ) {
+
     // 最後 128 個 char(不含\n) 都是 value
     string value( 128, '\0' );
-    for ( int iValue = 0, iCmd = ( keyLine.length() - 129 ); iValue < 128; ++iValue, ++iCmd )
+
+    for ( int iValue = 0, iCmd = ( keyLine.length() - 128 ); iValue < 128; ++iValue, ++iCmd )
         value[iValue] = keyLine[iCmd];
+
     return value;
 }

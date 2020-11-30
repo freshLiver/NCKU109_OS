@@ -18,7 +18,6 @@ private:
     fstream myDB;
     int myDBID;
     string myDBPath;
-    // queue<string, string> putsBuffer;
 
 public:
     /**
@@ -27,6 +26,8 @@ public:
      * @param id Worker 負責的 db 編號（0~9）
      */
     DBWorker( int id );
+
+    ~DBWorker( );
 
 
     /**
