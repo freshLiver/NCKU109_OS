@@ -10,9 +10,11 @@
 #include <string>
 #include <thread>
 #include <tuple>
+#include <vector>
 
 using std::fstream;
 using std::queue;
+using std::vector;
 using std::string;
 using std::thread;
 using std::tuple;

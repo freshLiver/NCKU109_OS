@@ -26,12 +26,12 @@ KeyValueStorage::KeyValueStorage( string input, string output ) {
     fstream fin( input.c_str() );
 
     // 建立 size N 的 cmd buffer, 一次讀 N 行 直到 eof
-    int bufSize = 10000, count;
+    int bufSize = 10000, readCmds;
     string *cmdBuffer = new string[bufSize];
 
     do {
         // get N commands
-        count = ReadNCommands( fin, bufSize, cmdBuffer );
+        readCmds = ReadNCommands( fin, bufSize, cmdBuffer );
 
         // 依序 quick parse 各個 cmd 並推給 workerThread 進階分析
         int index;
@@ -42,7 +42,7 @@ KeyValueStorage::KeyValueStorage( string input, string output ) {
         for ( int thID = 0; thID < 10; ++thID )
             KeyValueStorage::workerThreads[thID] = thread( ParseUntilNotPUT, isPUT, thID );
 
-        for ( int iBuffer = 0; iBuffer < count; ++iBuffer ) {
+        for ( int iBuffer = 0; iBuffer < readCmds; ++iBuffer ) {
             std::tie( type, index ) = QuickParseCmd( cmdBuffer[iBuffer] );
 
             // 若是 PUT 就直接加入 worker 的 queue
@@ -57,27 +57,40 @@ KeyValueStorage::KeyValueStorage( string input, string output ) {
                     KeyValueStorage::workerThreads[i].join();
 
 
-                // ! 判斷是 SCAN 還是 GET
+                // SCAN 跟 GET 只差在在 SCAN 需要進行多次 GET, 兩種都是從 key1 開始 GET
+                string key1;
+                LL numOfKeys, beginKey;
+
                 if ( type == GET ) {
-
-                    // 根據 index 決定選用哪個 worker
-                    DBWorker *worker = new DBWorker( index );
-
-                    // 抓出 SET command 中的 key
-                    KeyValueStorage::GetKeyFromCmd( cmdBuffer[iBuffer], key, 4, '\0' );
-
-                    // 根據 key 從 worker 負責的 db 中抓出 value
-                    value = worker->GetValueByKey( key );
-
-                    // TODO 輸出 GET 結果
-
-                    // 關閉 worker
-                    delete worker;
+                    KeyValueStorage::GetKeyFromCmd( cmdBuffer[iBuffer], key1, 4, '\0' );
+                    beginKey = stoll( key1 );
+                    numOfKeys = 1;
                 }
-                // TODO SCAN
                 else {
+                    string key2;
+                    std::tie( key1, key2 ) = KeyValueStorage::ParseCommandAs( SCAN, cmdBuffer[iBuffer] );
+                    beginKey = stoll( key1 );
+                    numOfKeys = stoll( key2 ) - stoll( key1 ) + 1;
                 }
 
+                // 開啟所有 worker
+                vector<DBWorker *> workers;
+                for ( int id = 0; id < 10; ++id )
+                    workers.push_back( new DBWorker( id ) );
+
+                // 根據 numOfKeys 從 beginKey 開始進行 GET
+                for ( LL i = 0; i < numOfKeys; ++i, ++beginKey ) {
+
+                    // quick parse 的時候就知道 index 了
+                    string value = workers[index]->GetValueByKey( std::to_string( beginKey ) );
+
+                    // print value(GET result)
+                    DEBUG( "%lld is %s", beginKey, value.c_str() );
+                }
+
+                // ! 關閉所有 worker
+                for ( int id = 0; id < 10; ++id )
+                    delete workers[id];
 
                 // 所有 thread 都結束後重設 flag 並重新啟動 thread
                 isPUT = true;
@@ -85,7 +98,7 @@ KeyValueStorage::KeyValueStorage( string input, string output ) {
                     KeyValueStorage::workerThreads[thID] = thread( ParseUntilNotPUT, isPUT, thID );
             }
         }
-    } while ( count == -1 );
+    } while ( readCmds == -1 );
 }
 
 
