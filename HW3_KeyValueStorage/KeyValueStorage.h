@@ -35,7 +35,7 @@ public:
      * @param input input 檔案路徑
      * @param output output 檔案路徑
      */
-    KeyValueStorage( string input, string output );
+    KeyValueStorage( string &input, string &output );
 
 private:
     /**
@@ -44,7 +44,7 @@ private:
      * @param isPUT 目前 main thread 讀取到的指令是否為 put
      * @param thID thread id, also worker id
      */
-    void ParseUntilNotPUT( bool &isPUT, int thID );
+    static void ParseUntilNotPUT( bool *isPUT, int thID );
 
 
     /**
@@ -55,7 +55,7 @@ private:
      * @param cmdBuffer 讀取的 cmd 得暫存器，大小應比 maxLine 大
      * @return int      eof 時讀取了幾行，非 eof 時為 -1 (必為 maxLine)
      */
-    static int ReadNCommands( fstream &fin, int maxLine, string cmdBuffer[] );
+    static int ReadNCommands( fstream *fin, int maxLine, string cmdBuffer[] );
 
 
     /**
