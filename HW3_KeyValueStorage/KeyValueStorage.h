@@ -96,7 +96,7 @@ private:
      * @param cmd command
      * @return tuple<string, string> command 的 key, value(or key2)
      */
-    static tuple<string, string> ParseCommandAs( CmdType type, string cmd );
+    static tuple<string, string> ParseCommandAs( CmdType type, string &cmd );
 };
 
 #endif        // KEYVALUESTORAGE_H
