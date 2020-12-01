@@ -1,4 +1,4 @@
-#define DEBUG( format, ... ) printf ( "DEBUG >>> " format "------- DEBUG END\n\n", __VA_ARGS__ )
+#define DEBUG( format, ... ) printf ( "DEBUG >>> " format "\n------- DEBUG END\n\n", __VA_ARGS__ )
 
 #define MAX_READ 1000
 
