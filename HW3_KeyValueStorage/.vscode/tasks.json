@@ -2,28 +2,19 @@
     "tasks": [
         {
             "type": "cppbuild",
-            "label": "hw3example",
-            "command": "/usr/bin/g++",
+            "label": "make makefile",
+            "command": "/usr/bin/make",
             "args": [
-                "-g",
-                "-pthread",
-                "-std=c++14",
-                "${fileDirname}/main.cpp",
-                "${fileDirname}/KeyValueStorage.cpp",
-                "-o",
-                "${fileDirname}/main.out",
+                "--file=${fileDirname}/makefile"
             ],
             "options": {
-                "cwd": "/usr/bin"
+                "cwd": "${fileDirname}"
             },
-            "problemMatcher": [
-                "$gcc"
-            ],
             "group": {
                 "kind": "build",
                 "isDefault": true
             },
-            "detail": "Generated task by Debugger"
+            "detail": "Compile with makefile"
         }
     ],
     "version": "2.0.0"

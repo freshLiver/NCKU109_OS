@@ -5,10 +5,10 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "DEBUG hw3example",
+            "name": "DEBUG main",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${fileDirname}/main.out",
+            "program": "${fileDirname}/main",
             "args": [
                 "./hw3example.input",
             ],
@@ -24,7 +24,7 @@
                     "ignoreFailures": true
                 }
             ],
-            "preLaunchTask": "hw3example",
+            "preLaunchTask": "make makefile",
             "miDebuggerPath": "/usr/bin/gdb"
         }
     ]
