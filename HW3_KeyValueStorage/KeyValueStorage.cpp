@@ -33,13 +33,14 @@ KeyValueStorage::KeyValueStorage( string &input, string &output ) {
     int bufSize = 10000, readCmds;
     string *cmdBuffer = new string[bufSize];
 
+    bool isPUT = true;
     do {
         // get N commands
         readCmds = ReadNCommands( &fin, bufSize, cmdBuffer );
 
         // 依序 quick parse 各個 cmd 並推給 workerThread 進階分析
         int index;
-        bool isPUT = true;
+        isPUT = true;
         CmdType type;
 
         for ( int thID = 0; thID < 10; ++thID )
@@ -103,6 +104,7 @@ KeyValueStorage::KeyValueStorage( string &input, string &output ) {
         }
 
         // ! join all thread before entering next round reading
+        isPUT = false;
         for ( int i = 0; i < 10; ++i )
             KeyValueStorage::workerThreads[i].join();
 
@@ -199,7 +201,7 @@ tuple<CmdType, int> KeyValueStorage::QuickParseCmd( string &cmd ) {
 }
 
 
-int KeyValueStorage::GetKeyFromCmd( string cmd, string &key, int start, char delim ) {
+int KeyValueStorage::GetKeyFromCmd( string &cmd, string &key, int start, char delim ) {
     for ( int iCmd = start, iKey = 0;; ++iCmd, ++iKey ) {
         if ( cmd[iCmd] == delim )
             return ++iCmd;
@@ -209,13 +211,13 @@ int KeyValueStorage::GetKeyFromCmd( string cmd, string &key, int start, char del
 }
 
 
-void KeyValueStorage::GetValueFromCmd( string cmd, string &value, int start ) {
+void KeyValueStorage::GetValueFromCmd( string &cmd, string &value, int start ) {
     for ( int iCmd = start, iValue = 0; iValue < 128; ++iCmd, ++iValue )
         value[iValue] = cmd[iCmd];
 }
 
 
-tuple<string, string> KeyValueStorage::ParseCommandAs( CmdType type, string cmd ) {
+tuple<string, string> KeyValueStorage::ParseCommandAs( CmdType type, string &cmd ) {
 
     string key( 20, '\0' ), value( 129, '\0' );
     int end;
