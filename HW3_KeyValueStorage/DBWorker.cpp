@@ -45,10 +45,11 @@ void DBWorker::UpdateKeyValue( string key, string value ) {
     // ! key 在 db 中 -> Replace 原本的 key
     if ( std::get<0>( result ) != -1 ) {
         // write pointer 移動到 line end - 129(包含 \n) 的位置
-        this->myDB.seekp( std::get<0>( result ) - 129 );
+        this->myDB.seekp( std::get<0>( result ) - 129, std::ios_base::beg );
 
-        // 用新 value 取代原本的 value
+        // 用新 value 取代原本的 value 並且 flush
         this->myDB.write( value.c_str(), 128 );
+        this->myDB.flush();
     }
 
     // ! key 不在 db 中 -> Insert new Value
@@ -57,19 +58,23 @@ void DBWorker::UpdateKeyValue( string key, string value ) {
         this->myDB.close();
         this->myDB = fstream( this->myDBPath.c_str(), std::ios_base::app );
 
-        // append key and space
-        this->myDB.write( key.c_str(), key.length() );
+        // ! append key ( 不可用 .length, 需要依序 write 直到 '\0')
+        for ( int iKey = 0; key[iKey] != '\0'; ++iKey )
+            this->myDB.write( &key.at( iKey ), 1 );
+
+        // append space
         this->myDB.write( " ", 1 );
 
         // append value and newline
         this->myDB.write( value.c_str(), 128 );
         this->myDB.write( "\n", 1 );
 
-        // re-open db and change to default io mode
+        // flush and re-open db and change to default io mode
+        this->myDB.flush();
         this->myDB.close();
         this->myDB = fstream( this->myDBPath.c_str() );
     }
-    this->myDB.flush();
+    return;
 }
 
 
@@ -89,12 +94,12 @@ tuple<long, string> DBWorker::FindKeyLineEndFrom( fstream &db, string key ) {
 
         // 比對該行 key
         bool sameKey = true;
-        for ( int i = 0; i < key.size() && sameKey; ++i )
+        for ( int i = 0; ( key[i] != '\0' ) && sameKey; ++i )
             sameKey = ( key[i] == tmp[i] );
 
         // 若 key 完全相同就回傳結果
         if ( sameKey )
-            return std::make_tuple( db.tellp(), tmp );
+            return std::make_tuple( db.tellg(), tmp );
     }
 
     return std::make_tuple( -1, "EMPTY" );
