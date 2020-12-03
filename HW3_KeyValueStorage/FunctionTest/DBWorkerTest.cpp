@@ -10,13 +10,26 @@ void initDB() {
     }
 }
 
+
 int main( int argc, char const *argv[] ) {
 
     initDB();
+    DBWorker worker0( 2 );
 
-    DBWorker worker( 0 );
-    string value = worker.GetValueByKey( "2147480800" );
-    printf( "get value :%s\n", value.c_str() );
-    worker.UpdateKeyValue("2147480800","22EE88GGGWw8kYwlnlZYW2TErjTA2uqqLPlSKPOjOZaCkctdLeCee7ssnaBpN7yBNyN6a1Z9GQk0toKYBuC3xY99iAqHWndcBd4aV6ZXkbQEyJTfdpVKzzuoq4ZzHhkm");
+    string value = "EEEEXKRPNQEfqotp9RUNgRUbgeTQ9FKvvBgHWE5SWB2ko2Qz1DgGiVkMgmlOR3nHMVxE9OwMd0CHECRTaoLIoWElzSD2r0Jbcc1"
+                   "8c4AZ0bbbjH3L6WbGbAiGsm9NbEIS";
+    string value2 =
+        "2222XKRPNQEfqotp9RUNgRUbgeTQ9FKvvBgHWE5SWB2ko2Qz1DgGiVkMgmlOR3nHMVxE9OwMd0CHECRTaoLIoWElzSD2r0Jbcc1"
+        "8c4AZ0bbbjH3L6WbGbAiGsm9NbEIS";
+    worker0.UpdateKeyValue( "2147482325", value );
+    worker0.UpdateKeyValue( "777777777", value2 );
+
+    // auto res0 = worker0.FindKeyLineEndFrom( db0, "2147483327" );
+    auto res = worker0.GetValueByKey( "777777777" );
+    res = worker0.GetValueByKey( "2147482325" );
+
+    worker0.UpdateKeyValue( "2147482325", value2 );
+    worker0.UpdateKeyValue( "777777777", value );
+
     return 0;
 }
