@@ -3,6 +3,7 @@
 
 #include <cstdlib>
 #include <fstream>
+#include <mutex>
 #include <queue>
 #include <string>
 #include <tuple>
@@ -14,10 +15,12 @@ using std::tuple;
 
 class DBWorker {
 
-private:
-    fstream myDB;
+public:
+    // private:
     int myDBID;
+    FILE *myDB;
     string myDBPath;
+    static std::mutex writeLock;
 
 public:
     /**
@@ -27,7 +30,7 @@ public:
      */
     DBWorker( int id );
 
-    ~DBWorker( );
+    ~DBWorker();
 
 
     /**
@@ -49,7 +52,7 @@ public:
 
 
 
-private:
+    // private:
     /**
      *
      * @brief 從某個以開啟的檔案中尋找特定 key 值

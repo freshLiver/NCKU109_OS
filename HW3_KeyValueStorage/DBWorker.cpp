@@ -5,6 +5,7 @@
 **************** public methods ****************
 ***********************************************/
 
+std::mutex DBWorker::DBWorker::writeLock;
 
 DBWorker::DBWorker( int id ) {
 
@@ -14,19 +15,21 @@ DBWorker::DBWorker( int id ) {
     // 根據 id 決定 db 路徑
     this->myDBPath = "./db/db0";
     this->myDBPath[this->myDBPath.length() - 1] = '0' + id;
-
-    // 開啟 db
-    this->myDB = fstream( myDBPath );
 }
 
 
-DBWorker::~DBWorker() { this->myDB.close(); }
+DBWorker::~DBWorker() {}
 
 
 string DBWorker::GetValueByKey( string key ) {
 
-    // 從自己的 db 中搜尋這個 key
-    auto result = DBWorker::FindKeyLineEndFrom( this->myDB, key );
+    // 開啟並從自己的 db 中搜尋這個 key
+    fstream reader( this->myDBPath.c_str(), std::ios_base::in );
+
+    auto result = DBWorker::FindKeyLineEndFrom( reader, key );
+
+    // ! 關閉 db
+    reader.close();
 
     // lineEnd == -1 代表找不到 key，回傳 "EMPTY"
     if ( std::get<0>( result ) == -1 )
@@ -39,40 +42,47 @@ string DBWorker::GetValueByKey( string key ) {
 
 void DBWorker::UpdateKeyValue( string key, string value ) {
 
+    // read mode open my db
+    fstream reader( this->myDBPath.c_str(), std::ios_base::in );
+
     // 從 db 裡搜尋 key
-    auto result = DBWorker::FindKeyLineEndFrom( this->myDB, key );
+    auto result = DBWorker::FindKeyLineEndFrom( reader, key );
+
+    // ! 搜尋完就關閉 fs
+    reader.close();
 
     // ! key 在 db 中 -> Replace 原本的 key
     if ( std::get<0>( result ) != -1 ) {
+        // ! write file
+        this->myDB = fopen( this->myDBPath.c_str(), "r+" );
+
         // write pointer 移動到 line end - 129(包含 \n) 的位置
-        this->myDB.seekp( std::get<0>( result ) - 129, std::ios_base::beg );
+        fseek( this->myDB, std::get<0>( result ) - 129, SEEK_SET );
 
         // 用新 value 取代原本的 value 並且 flush
-        this->myDB.write( value.c_str(), 128 );
-        this->myDB.flush();
+        DBWorker::writeLock.lock();
+        fputs( value.c_str(), this->myDB );
+        fflush( this->myDB );
+        DBWorker::writeLock.unlock();
+
+        // ! 結束後關閉 my db
+        fclose( this->myDB );
     }
 
-    // ! key 不在 db 中 -> Insert new Value
+    // ! key 不在 db 中 -> echo append new value
     else {
-        // re-open db and change to append mode
-        this->myDB.close();
-        this->myDB = fstream( this->myDBPath.c_str(), std::ios_base::app );
+        // echo "key[<=20] value[128]\n" >> ./db/dbx
+        this->myDB = fopen( this->myDBPath.c_str(), "a+" );
 
-        // ! append key ( 不可用 .length, 需要依序 write 直到 '\0')
-        for ( int iKey = 0; key[iKey] != '\0'; ++iKey )
-            this->myDB.write( &key.at( iKey ), 1 );
+        DBWorker::writeLock.lock();
+        fputs( key.c_str(), this->myDB );
+        fputs( " ", this->myDB );
+        fputs( value.c_str(), this->myDB );
+        fputs( "\n", this->myDB );
+        fflush( this->myDB );
+        DBWorker::writeLock.unlock();
 
-        // append space
-        this->myDB.write( " ", 1 );
-
-        // append value and newline
-        this->myDB.write( value.c_str(), 128 );
-        this->myDB.write( "\n", 1 );
-
-        // flush and re-open db and change to default io mode
-        this->myDB.flush();
-        this->myDB.close();
-        this->myDB = fstream( this->myDBPath.c_str() );
+        fclose( this->myDB );
     }
     return;
 }
@@ -86,7 +96,6 @@ void DBWorker::UpdateKeyValue( string key, string value ) {
 tuple<long, string> DBWorker::FindKeyLineEndFrom( fstream &db, string key ) {
 
     // 清除 eof flag 並回到檔案開頭
-    db.clear();
     db.seekg( 0, std::ios::beg );
 
     // 依據查詢各行
