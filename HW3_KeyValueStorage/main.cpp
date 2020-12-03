@@ -1,9 +1,13 @@
 #include "KeyValueStorage.h"
 #include <ctime>
 
-//
-// Convert input file name to output file name by change .input -> .output
-//
+
+/**
+ * @brief Convert input file name to output file name by change .input -> .output
+ * 
+ * @param inputName input filename with extension(.input)
+ * @return string return output filename with extension(.output)
+ */
 string GetOutputName( string inputName ) {
     string res( inputName.size() + 1, '\0' );
     int dotEnd = inputName.size() - 5;
@@ -23,9 +27,14 @@ string GetOutputName( string inputName ) {
 
     return res;
 }
-//
-// MAIN, input format is : ./executable ./inputfile.input
-//
+
+/**
+ * @brief 
+ * 
+ * @param argc 
+ * @param argv 
+ * @return int 
+ */
 int main( int argc, char const *argv[] ) {
     time_t start, finish;
 
