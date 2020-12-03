@@ -11,6 +11,7 @@ using std::make_tuple;
 string KeyValueStorage::inputFile, KeyValueStorage::outputFile;
 thread KeyValueStorage::workerThreads[10];
 queue<string> KeyValueStorage::workerTODO[10];
+std::mutex KeyValueStorage::workerLock[10];
 
 KeyValueStorage::KeyValueStorage( string &input, string &output ) {
 
@@ -33,25 +34,38 @@ KeyValueStorage::KeyValueStorage( string &input, string &output ) {
     int bufSize = 10000, readCmds;
     string *cmdBuffer = new string[bufSize];
 
+    // ! pass pointer, do not recycle in every round
     bool isPUT = true;
+
     do {
         // get N commands
         readCmds = ReadNCommands( &fin, bufSize, cmdBuffer );
 
+        // ? 測試 read 到的 N 行
+        for ( int i = 0; i < readCmds; ++i ) {
+            string cmd = "echo \"" + cmdBuffer[i] + "\" >> cmds.output";
+            system( cmd.c_str() );
+        }
+
         // 依序 quick parse 各個 cmd 並推給 workerThread 進階分析
         int index;
-        isPUT = true;
         CmdType type;
-
+        
+        // 啟動所有 thread workers
+        isPUT = true;
         for ( int thID = 0; thID < 10; ++thID )
             KeyValueStorage::workerThreads[thID] = thread( KeyValueStorage::ParseUntilNotPUT, &isPUT, thID );
 
+        // 處理所有 buffer 中的 command
         for ( int iBuffer = 0; iBuffer < readCmds; ++iBuffer ) {
             std::tie( type, index ) = QuickParseCmd( cmdBuffer[iBuffer] );
 
             // 若是 PUT 就直接加入 worker 的 queue
-            if ( type == PUT )
+            if ( type == PUT ) {
+                KeyValueStorage::workerLock[index].lock();
                 KeyValueStorage::workerTODO[index].push( cmdBuffer[iBuffer] );
+                KeyValueStorage::workerLock[index].unlock();
+            }
 
             // 如果是 GET 或是 SCAN 則需要等待資料都更新完才能作業
             else {
@@ -77,6 +91,9 @@ KeyValueStorage::KeyValueStorage( string &input, string &output ) {
                     numOfKeys = stoll( key2 ) - stoll( key1 ) + 1;
                 }
 
+                // 開啟 output stream
+                fstream oStream( output.c_str(), std::ios_base::app );
+
                 // 開啟所有 worker
                 vector<DBWorker *> workers;
                 for ( int id = 0; id < 10; ++id )
@@ -86,11 +103,16 @@ KeyValueStorage::KeyValueStorage( string &input, string &output ) {
                 for ( LL i = 0; i < numOfKeys; ++i, ++beginKey ) {
 
                     // quick parse 的時候就知道 index 了
-                    string value( workers[index]->GetValueByKey( std::to_string( beginKey ) ) );
+                    string value = workers[index]->GetValueByKey( std::to_string( beginKey ) );
 
-                    // print value(GET result)
-                    DEBUG( "%lld is %s", beginKey, value.c_str() );
+                    // output GET result(value) and newline
+                    oStream.write( value.c_str(), value.length() );
+                    oStream.write( "\n", 1 );
                 }
+
+                // flush and close output stream
+                oStream.flush();
+                oStream.close();
 
                 // ! 關閉所有 worker
                 for ( int id = 0; id < 10; ++id )
@@ -119,17 +141,19 @@ KeyValueStorage::KeyValueStorage( string &input, string &output ) {
 
 
 void KeyValueStorage::ParseUntilNotPUT( bool *isPUT, int thID ) {
-    DEBUG( "Thread %d in ParseUntilNotPUT", thID );
     // init worker and get its todo queue
     DBWorker *worker = new DBWorker( thID );
-    queue<string> *myQueue = &( KeyValueStorage::workerTODO[thID] );
+    auto myQueue = &( KeyValueStorage::workerTODO[thID] );
 
     // do todo tasks until not PUT cmd
+    string cmd, key, value;
     try {
         while ( ( *isPUT == true ) || !myQueue->empty() ) {
 
             // pop front cmd
-            string cmd = myQueue->front();
+            KeyValueStorage::workerLock[thID].lock();
+            cmd = myQueue->front();
+            KeyValueStorage::workerLock[thID].unlock();
 
             // if todo queue not empty
             if ( cmd != "" ) {
@@ -137,7 +161,6 @@ void KeyValueStorage::ParseUntilNotPUT( bool *isPUT, int thID ) {
                 myQueue->pop();
 
                 // parse this cmd
-                string key, value;
                 std::tie( key, value ) = KeyValueStorage::ParseCommandAs( PUT, cmd );
 
                 // worker update this pair
@@ -146,24 +169,36 @@ void KeyValueStorage::ParseUntilNotPUT( bool *isPUT, int thID ) {
         }
     }
     catch ( std::exception &e ) {
+        DEBUG( "at thread %d, isPUT: %d, empty: %d, \ncmd :%s, \nfront: %s",
+               thID,
+               *isPUT,
+               myQueue->empty(),
+               cmd.c_str(),
+               myQueue->front().c_str() );
+
         DEBUG( "what() :%s", e.what() );
+
+        // ? print current todo queue
+        for ( int i = 0; i < myQueue->size(); ++i ) {
+            DEBUG( "queue : %s\n", myQueue->front().c_str() );
+            myQueue->pop();
+        }
     }
 
     // NOT PUT and all task done, delete worker
-    printf( "delete worker %d\n", thID );
     delete worker;
     return;
 }
 
 
-int KeyValueStorage::ReadNCommands( fstream *fin, int maxLines, string cmdBuffer[] ) {
+int KeyValueStorage::ReadNCommands( fstream *fin, int maxLines, string *cmdBuffer ) {
     // 一次讀最多 maxLines lines 到 buffer 中
     int count;
     for ( count = 0; count < maxLines && !fin->eof(); ++count )
         std::getline( *fin, cmdBuffer[count] );
 
     // 檢查 eof, 如果 eof 就回傳 count 數量
-    return fin->eof() ? count : -1;
+    return fin->eof() ? count : maxLines;
 }
 
 
@@ -197,6 +232,7 @@ tuple<CmdType, int> KeyValueStorage::QuickParseCmd( string &cmd ) {
         }
 
     // 回傳型別以及最後一個數字
+    DEBUG( "quick parse result : type %d, index %c, \ncmd :%s", type, lastChar, cmd.c_str() );
     return make_tuple( type, lastChar - '0' );
 }
 

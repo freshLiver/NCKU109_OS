@@ -6,6 +6,7 @@
 #include <cstdio>
 #include <exception>
 #include <fstream>
+#include <mutex>
 #include <queue>
 #include <string>
 #include <thread>
@@ -14,10 +15,10 @@
 
 using std::fstream;
 using std::queue;
-using std::vector;
 using std::string;
 using std::thread;
 using std::tuple;
+using std::vector;
 
 class KeyValueStorage {
 
@@ -26,7 +27,7 @@ private:
     static string inputFile, outputFile;
     static thread workerThreads[10];
     static queue<string> workerTODO[10];
-
+    static std::mutex workerLock[10];
 
 public:
     /**
@@ -53,7 +54,7 @@ private:
      * @param fin       input file fstream
      * @param maxLine   最大讀取 line 數
      * @param cmdBuffer 讀取的 cmd 得暫存器，大小應比 maxLine 大
-     * @return int      eof 時讀取了幾行，非 eof 時為 -1 (必為 maxLine)
+     * @return int      eof 時讀取了幾行，非 eof 時必為 maxLine
      */
     static int ReadNCommands( fstream *fin, int maxLine, string cmdBuffer[] );
 
