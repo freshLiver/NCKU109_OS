@@ -4,7 +4,7 @@
 
 /**
  * @brief Convert input file name to output file name by change .input -> .output
- * 
+ *
  * @param inputName input filename with extension(.input)
  * @return string return output filename with extension(.output)
  */
@@ -29,11 +29,11 @@ string GetOutputName( string inputName ) {
 }
 
 /**
- * @brief 
- * 
- * @param argc 
- * @param argv 
- * @return int 
+ * @brief
+ *
+ * @param argc
+ * @param argv
+ * @return int
  */
 int main( int argc, char const *argv[] ) {
     time_t start, finish;

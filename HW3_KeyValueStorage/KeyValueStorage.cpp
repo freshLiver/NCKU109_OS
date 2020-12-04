@@ -100,7 +100,6 @@ KeyValueStorage::KeyValueStorage( string &input, string &output ) {
                 // 根據 numOfKeys 從 beginKey 開始進行 GET 並輸出到 output 檔案中
                 fstream oStream( output.c_str(), std::ios_base::app );
                 for ( LL i = 0; i < numOfKeys; ++i, ++beginKey ) {
-                    // TODO flush before GET
                     // GET value of this key
                     string value = workers[index]->GetValueByKey( std::to_string( beginKey ) );
 
