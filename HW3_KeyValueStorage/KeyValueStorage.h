@@ -3,22 +3,14 @@
 
 #include "macros.h"
 #include <cstdio>
-#include <exception>
 #include <fstream>
 #include <map>
-#include <mutex>
 #include <queue>
 #include <string>
-#include <thread>
-#include <tuple>
-#include <vector>
 
 using std::fstream;
 using std::queue;
 using std::string;
-using std::thread;
-using std::tuple;
-using std::vector;
 using std::map;
 using std::pair;
 
@@ -31,7 +23,6 @@ class KeyValueStorage {
   private:
     static string inputFile, outputFile;
     static string *cmdBuffer;
-    static std::mutex queueLock[10];
 
   public:
     /**
@@ -62,7 +53,7 @@ class KeyValueStorage {
      * @param cmd command
      * @return tuple<CmdType, int> cmd 的 type 以及所屬 db index
      */
-    static tuple<CmdType, int> QuickParseCmd( string &cmd );
+    static pair<CmdType, int> QuickParseCmd( string &cmd );
 
 
     /**
@@ -94,7 +85,7 @@ class KeyValueStorage {
      * @param cmd command
      * @return tuple<string, string> command 的 key, value(or key2)
      */
-    static tuple<string, string> ParseCommandAs( CmdType type, string &cmd );
+    static pair<string, string> ParseCommandAs( CmdType type, string &cmd );
 };
 
 #endif        // KEYVALUESTORAGE_H
