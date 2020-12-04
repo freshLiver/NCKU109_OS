@@ -9,7 +9,7 @@ using std::make_tuple;
 
 pair<long, string> FindKeyLineEndFrom( fstream &db, string key );
 void UpdateDBFromPutBuffer( map<string, string> &mPutBuf, int &dbID );
-string GetValueByKey( string key, int &dbID );
+string GetValueByKey( string key, int dbID );
 
 string KeyValueStorage::inputFile, KeyValueStorage::outputFile;
 string *KeyValueStorage::cmdBuffer;
@@ -87,8 +87,8 @@ KeyValueStorage::KeyValueStorage( string &input, string &output ) {
                         UpdateDBFromPutBuffer( mPutBuf[dbID], dbID );
 
                     // do all get cmds and output result to output file
-                    for ( LL count = 0; count < numOfGets; ++count ) {
-                        string value = GetValueByKey( std::to_string( begin + count ), cmdIndex );
+                    for ( LL count = 0; count < numOfGets; ++count, ++begin ) {
+                        string value = GetValueByKey( std::to_string( begin ), ( cmdIndex++ ) % 10 );
                         if ( isFirstCmd == true ) {
                             isFirstCmd = false;
                             fout << value.c_str();
@@ -288,7 +288,7 @@ void UpdateDBFromPutBuffer( map<string, string> &mPutBuf, int &dbID ) {
         db.flush();
         db.clear();
         if ( db.badbit || db.failbit )
-            printf( "flush fail" );
+            printf( "" );
         db.close();
     }
 
@@ -297,7 +297,7 @@ void UpdateDBFromPutBuffer( map<string, string> &mPutBuf, int &dbID ) {
     db.close();
 }
 
-string GetValueByKey( string key, int &dbID ) {
+string GetValueByKey( string key, int dbID ) {
 
     // where is my db
     string myDBPath = "./db/db0";
@@ -306,6 +306,7 @@ string GetValueByKey( string key, int &dbID ) {
     // 開啟並從自己的 db 中搜尋這個 key
     fstream reader( myDBPath.c_str(), std::ios_base::in );
     auto result = FindKeyLineEndFrom( reader, key );
+    reader.clear();
     reader.close();
 
     // lineEnd == -1 代表找不到 key，回傳 "EMPTY"
