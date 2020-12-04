@@ -36,21 +36,27 @@ string GetOutputName( string inputName ) {
  * @return int
  */
 int main( int argc, char const *argv[] ) {
-    time_t start, finish;
 
-    // start counting time
-    start = time( NULL );
+    try {
+        time_t start, finish;
 
-    // get input and output file name with ext as std::string
-    string inputFilename( argv[1] );
-    string outputFileName( GetOutputName( inputFilename ) );
+        // start counting time
+        start = time( NULL );
 
-    // pass input and output to KVS instance
-    KeyValueStorage( inputFilename, outputFileName );
+        // get input and output file name with ext as std::string
+        string inputFilename( argv[1] );
+        string outputFileName( GetOutputName( inputFilename ) );
 
-    // get finish time, and calc time cost
-    finish = time( NULL );
-    printf( "Total Time Cost : %ld secs.\n", finish - start );
+        // pass input and output to KVS instance
+        KeyValueStorage( inputFilename, outputFileName );
+
+        // get finish time, and calc time cost
+        finish = time( NULL );
+        printf( "Total Time Cost : %ld secs.\n", finish - start );
+    }
+    catch ( std::exception &e ) {
+        printf( "err : %s\n", e.what() );
+    }
 
     return 0;
 }

@@ -1,3 +1,18 @@
-**/*.out
+# Ignore all
+*
+# Unignore all with extensions
+!*.*
+# Unignore all dirs
+!*/
+# unignore makefile
+!makefile
+!Makefile
+
+**/*.db
+
 **/*.o
+**/*.out
+**/*.output*
+**/*.input*
+
 

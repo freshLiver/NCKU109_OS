@@ -11,15 +11,11 @@ pair<long, string> FindKeyLineEndFrom( fstream &db, string key );
 void UpdateDBFromPutBuffer( map<string, string> &mPutBuf, int &dbID );
 string GetValueByKey( string key, int dbID );
 
-string KeyValueStorage::inputFile, KeyValueStorage::outputFile;
 string *KeyValueStorage::cmdBuffer;
+fstream KeyValueStorage::fin, KeyValueStorage::fout;
 
 
 KeyValueStorage::KeyValueStorage( string &input, string &output ) {
-
-    // get input and output file
-    KeyValueStorage::inputFile = string( input );
-    KeyValueStorage::outputFile = string( output );
 
     // check if db dir exists
     system( "mkdir ./db/" );
@@ -31,8 +27,8 @@ KeyValueStorage::KeyValueStorage( string &input, string &output ) {
 
     // open input output file in read mode
     bool isFirstCmd = true;
-    fstream fin( input.c_str(), std::ios_base::in );
-    fstream fout( output.c_str(), std::ios_base::out );
+    KeyValueStorage::fin.open( input.c_str(), std::ios_base::in );
+    KeyValueStorage::fout.open( output.c_str(), std::ios_base::out );
 
     // init cmd buffer, todo queue, put buffer
     queue<string> qTodoBuf[DBNum];
@@ -41,10 +37,16 @@ KeyValueStorage::KeyValueStorage( string &input, string &output ) {
 
     // read commands to buffer until EOF
     int numOfCmds;
-    while ( fin.eof() == false ) {
+    int progress = 0;
+    ;
+    while ( KeyValueStorage::fin.eof() == false ) {
 
         // read cmds into buffer and get how many cmds read
-        numOfCmds = ReadNCommands( fin, MaxBufSize, cmdBuffer );
+        numOfCmds = ReadNCommands( KeyValueStorage::fin, MaxBufSize, cmdBuffer );
+
+        // print progress
+        progress += numOfCmds;
+        printf( "%7d\n", progress );
 
         // parse all cmds in buffer
         int cmdIndex;
@@ -91,19 +93,18 @@ KeyValueStorage::KeyValueStorage( string &input, string &output ) {
                         string value = GetValueByKey( std::to_string( begin ), ( cmdIndex++ ) % 10 );
                         if ( isFirstCmd == true ) {
                             isFirstCmd = false;
-                            fout << value.c_str();
+                            KeyValueStorage::fout << value.c_str();
                         }
                         else
-                            fout << "\n" << value.c_str();
+                            KeyValueStorage::fout << "\n" << value.c_str();
                     }
                     break;
             }
         }
     }
-
-    fin.close();
-    fout.flush();
-    fout.close();
+    KeyValueStorage::fin.close();
+    KeyValueStorage::fout.flush();
+    KeyValueStorage::fout.close();
 }
 /************************************************
 **************** private methods ****************
@@ -135,8 +136,11 @@ void KeyValueStorage::ParseTodoBuffer( queue<string> &qTodoBuf, map<string, stri
 int KeyValueStorage::ReadNCommands( fstream &fin, int maxLines, string *cmdBuffer ) {
     // 一次讀最多 maxLines lines 到 buffer 中
     int count;
-    for ( count = 0; count < maxLines && !fin.eof(); ++count )
+    for ( count = 0; count < maxLines; ++count ) {
         std::getline( fin, cmdBuffer[count] );
+        if ( fin.eof() == true )
+            break;
+    }
 
     // 檢查 eof, 如果 eof 就回傳 count 數量
     return fin.eof() ? count : maxLines;
@@ -287,8 +291,6 @@ void UpdateDBFromPutBuffer( map<string, string> &mPutBuf, int &dbID ) {
         // ! dont forget flush
         db.flush();
         db.clear();
-        if ( db.badbit || db.failbit )
-            printf( "" );
         db.close();
     }
 

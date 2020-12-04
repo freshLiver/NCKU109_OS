@@ -4,5 +4,5 @@ all:
 	g++ -g -std=c++14 KeyValueStorage.o main.o -o main
 
 rm:
-	rm ./hw3example.output
+	rm ./test.output
 	rm -r ./db/

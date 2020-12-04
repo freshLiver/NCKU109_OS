@@ -7,6 +7,7 @@
 #include <map>
 #include <queue>
 #include <string>
+#include <unistd.h>
 
 using std::fstream;
 using std::queue;
@@ -14,14 +15,14 @@ using std::string;
 using std::map;
 using std::pair;
 
-#define MaxBufSize 10000
+#define MaxBufSize 20000
 #define DBNum 10
 
 class KeyValueStorage {
 
   public:
   private:
-    static string inputFile, outputFile;
+    static fstream fin, fout;
     static string *cmdBuffer;
 
   public:
