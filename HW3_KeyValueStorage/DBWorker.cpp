@@ -96,6 +96,7 @@ void DBWorker::UpdateKeyValue( string key, string value ) {
 tuple<long, string> DBWorker::FindKeyLineEndFrom( fstream &db, string key ) {
 
     // 清除 eof flag 並回到檔案開頭
+    db.clear();
     db.seekg( 0, std::ios::beg );
 
     // 依據查詢各行
