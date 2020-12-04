@@ -7,6 +7,12 @@ using std::make_tuple;
 **************** public methods ****************
 ***********************************************/
 
+pair<long, string> FindKeyLineEndFrom( fstream &db, string key );
+void UpdateDBFromPutBuffer( map<string, string> &mPutBuf, int &dbID );
+string GetValueByKey( string key, int &dbID );
+
+string KeyValueStorage::inputFile, KeyValueStorage::outputFile;
+string *KeyValueStorage::cmdBuffer;
 
 
 KeyValueStorage::KeyValueStorage( string &input, string &output ) {
@@ -94,6 +100,10 @@ KeyValueStorage::KeyValueStorage( string &input, string &output ) {
             }
         }
     }
+
+    fin.close();
+    fout.flush();
+    fout.close();
 }
 /************************************************
 **************** private methods ****************
@@ -114,7 +124,7 @@ void KeyValueStorage::ParseTodoBuffer( queue<string> &qTodoBuf, map<string, stri
         auto iterValue = mPutBuf.find( key );
         // if not in buffer -> insert
         if ( iterValue == mPutBuf.end() )
-            mPutBuf.insert( key, value );
+            mPutBuf.insert( pair<string, string>( key, value ) );
 
         // if already in put buffer -> update
         else
@@ -164,7 +174,7 @@ pair<CmdType, int> KeyValueStorage::QuickParseCmd( string &cmd ) {
 
     // 回傳型別以及最後一個數字
     // DEBUG( "quick parse result : type %d, index %c, \ncmd :%s", type, lastChar, cmd.c_str() );
-    return pair( type, lastChar - '0' );
+    return pair<CmdType, int>( type, lastChar - '0' );
 }
 
 
@@ -206,10 +216,11 @@ pair<string, string> KeyValueStorage::ParseCommandAs( CmdType type, string &cmd 
             GetKeyFromCmd( cmd, value, end, '\0' );
             break;
     }
-    return pair( key, value );
+    return pair<string, string>( key, value );
 }
 
 
+// not members
 
 pair<long, string> FindKeyLineEndFrom( fstream &db, string key ) {
 
@@ -227,10 +238,10 @@ pair<long, string> FindKeyLineEndFrom( fstream &db, string key ) {
 
         // 若 key 完全相同就回傳結果
         if ( sameKey )
-            return pair( db.tellg(), tmp );
+            return pair<long, string>( db.tellg(), tmp );
     }
 
-    return pair( -1, "EMPTY" );
+    return pair<long, string>( -1, "EMPTY" );
 }
 
 
@@ -238,10 +249,11 @@ void UpdateDBFromPutBuffer( map<string, string> &mPutBuf, int &dbID ) {
 
     // where is my db
     string myDBPath = "./db/db0";
-    myDBPath.back() = '0' + dbID;
+    myDBPath[myDBPath.length() - 1] = '0' + dbID;
 
     // db file stream
     fstream db, reader( myDBPath.c_str(), std::ios_base::in );
+
 
     // update all put cmds in buffer map
     for ( auto &pKV : mPutBuf ) {
@@ -249,12 +261,12 @@ void UpdateDBFromPutBuffer( map<string, string> &mPutBuf, int &dbID ) {
         // check if this key in db
         reader.clear();
         reader.seekg( 0, std::ios_base::beg );
-        bool lineEnd = FindKeyLineEndFrom( reader, pKV.first ).first;
+        long lineEnd = FindKeyLineEndFrom( reader, pKV.first ).first;
 
         // if already in db, update
         if ( lineEnd != -1 ) {
             // open in out mode
-            db.open( myDBPath.c_str(), std::ios_base::out );
+            db.open( myDBPath.c_str() );
 
             // move write pointer
             db.seekp( lineEnd - 129, std::ios_base::beg );
@@ -274,6 +286,10 @@ void UpdateDBFromPutBuffer( map<string, string> &mPutBuf, int &dbID ) {
 
         // ! dont forget flush
         db.flush();
+        db.clear();
+        if ( db.badbit || db.failbit )
+            printf( "flush fail" );
+        db.close();
     }
 
     // clear buffer map and close db stream
@@ -285,7 +301,7 @@ string GetValueByKey( string key, int &dbID ) {
 
     // where is my db
     string myDBPath = "./db/db0";
-    myDBPath.back() = '0' + dbID;
+    myDBPath[myDBPath.length() - 1] = '0' + dbID;
 
     // 開啟並從自己的 db 中搜尋這個 key
     fstream reader( myDBPath.c_str(), std::ios_base::in );
@@ -297,9 +313,9 @@ string GetValueByKey( string key, int &dbID ) {
         return "EMPTY";
 
     // 如果有找到 key 就抓 keyline(res.second) 最後 128 個 char(不含\n)
-    char value[128];
+    char value[129];
     for ( int iValue = 0, iCmd = ( result.second.length() - 128 ); iValue < 128; ++iValue, ++iCmd )
         value[iValue] = result.second[iCmd];
-
+    value[128] = '\0';
     return string( value );
 }
