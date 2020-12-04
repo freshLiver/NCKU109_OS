@@ -1,11 +1,11 @@
 #if !defined( KEYVALUESTORAGE_H )
 #define KEYVALUESTORAGE_H
 
-#include "DBWorker.h"
 #include "macros.h"
 #include <cstdio>
 #include <exception>
 #include <fstream>
+#include <map>
 #include <mutex>
 #include <queue>
 #include <string>
@@ -19,17 +19,21 @@ using std::string;
 using std::thread;
 using std::tuple;
 using std::vector;
+using std::map;
+using std::pair;
+
+#define MaxBufSize 10000
+#define DBNum 10
 
 class KeyValueStorage {
 
-public:
-private:
+  public:
+  private:
     static string inputFile, outputFile;
-    static thread workerThreads[10];
-    static queue<string> workerTODO[10];
-    static std::mutex workerLock[10];
+    static string *cmdBuffer;
+    static std::mutex queueLock[10];
 
-public:
+  public:
     /**
      * @brief 根據 input 以及 output file 進行初始化並處理資料庫
      *
@@ -38,15 +42,8 @@ public:
      */
     KeyValueStorage( string &input, string &output );
 
-private:
-    /**
-     * @brief 各個 worker 解析 put todo cmds 並且更新資料庫，直到非 put cmd
-     *
-     * @param isPUT 目前 main thread 讀取到的指令是否為 put
-     * @param thID thread id, also worker id
-     */
-    static void ParseUntilNotPUT( bool *isPUT, int thID );
-
+  private:
+    static void ParseTodoBuffer( queue<string> &qTodoBuf, map<string, string> &mPutBuf, int &dbID );
 
     /**
      * @brief 一次讀取最多 N lines command 並存在 buffer 中，直到 eof
@@ -56,7 +53,7 @@ private:
      * @param cmdBuffer 讀取的 cmd 得暫存器，大小應比 maxLine 大
      * @return int      eof 時讀取了幾行，非 eof 時必為 maxLine
      */
-    static int ReadNCommands( fstream *fin, int maxLine, string cmdBuffer[] );
+    static int ReadNCommands( fstream &fin, int maxLine, string cmdBuffer[] );
 
 
     /**

@@ -1,0 +1,24 @@
+{
+    "tasks": [
+        {
+            "type": "cppbuild",
+            "label": "MAKEFILE",
+            "command": "/usr/bin/make",
+            "args": [
+                "--file=${fileDirname}/makefile",
+            ],
+            "options": {
+                "cwd": "${fileDirname}/"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "detail": "Generated task by Debugger"
+        }
+    ],
+    "version": "2.0.0"
+}
