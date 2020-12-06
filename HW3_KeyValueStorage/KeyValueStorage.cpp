@@ -33,7 +33,6 @@ KeyValueStorage::KeyValueStorage( string &input, string &output ) {
     // init cmd buffer, todo queue, put buffer
     queue<string> qTodoBuf[DBNum];
     map<string, string> mPutBuf[DBNum];
-    KeyValueStorage::cmdBuffer = new string[MaxBufSize];
 
     // read commands to buffer until EOF
     int numOfCmds;
@@ -80,7 +79,7 @@ KeyValueStorage::KeyValueStorage( string &input, string &output ) {
 
                     // do all get cmds and output result to output file
                     for ( LL count = 0; count < numOfGets; ++count, ++begin ) {
-                        string value = GetValueByKey( std::to_string( begin ), cmdIndex );
+                        string value = GetValueByKey( std::to_string( begin ), ( cmdIndex++ ) % 10 );
                         if ( isFirstCmd == true ) {
                             isFirstCmd = false;
                             KeyValueStorage::fout << value.c_str();
