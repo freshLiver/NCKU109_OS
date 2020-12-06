@@ -4,5 +4,5 @@ all:
 	g++ -g -std=c++14 KeyValueStorage.o main.o -o main
 
 rm:
-	rm ./test.output
+	rm ./*.output
 	rm -r ./db/

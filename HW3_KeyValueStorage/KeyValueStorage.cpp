@@ -38,33 +38,23 @@ KeyValueStorage::KeyValueStorage( string &input, string &output ) {
     // read commands to buffer until EOF
     int numOfCmds;
     int progress = 0;
-    ;
+
+    // read until eof
     while ( KeyValueStorage::fin.eof() == false ) {
-
-        // read cmds into buffer and get how many cmds read
-        numOfCmds = ReadNCommands( KeyValueStorage::fin, MaxBufSize, cmdBuffer );
-
-        // print progress
-        progress += numOfCmds;
-        printf( "%7d\n", progress );
-
-        // parse all cmds in buffer
         int cmdIndex;
         CmdType cmdType;
-        string currentCmd;
+        string cmd;
+        for ( int iCmd = 0; iCmd < MaxBufSize && getline( KeyValueStorage::fin, cmd ); ++iCmd ) {
 
-        for ( int iCmd = 0; iCmd < numOfCmds; ++iCmd ) {
-            currentCmd = cmdBuffer[iCmd];
-
-            // what is cmd type of this cmd
-            std::tie( cmdType, cmdIndex ) = QuickParseCmd( currentCmd );
+            // read a cmd and quick parse it immediately
+            std::tie( cmdType, cmdIndex ) = KeyValueStorage::QuickParseCmd( cmd );
 
             // check cmd type
             switch ( cmdType ) {
 
                 case PUT:
                     // push to corresponding todo queue
-                    qTodoBuf[cmdIndex].push( currentCmd );
+                    qTodoBuf[cmdIndex].push( cmd );
                     break;
 
                 case GET:
@@ -73,7 +63,7 @@ KeyValueStorage::KeyValueStorage( string &input, string &output ) {
                     LL begin, numOfGets = 1;
 
                     // parse this command into key, value or key1, key2
-                    auto parseResult = ParseCommandAs( cmdType, currentCmd );
+                    auto parseResult = ParseCommandAs( cmdType, cmd );
 
                     // convert scan and get to begin and numOfGets
                     begin = stoll( parseResult.first );
@@ -90,7 +80,7 @@ KeyValueStorage::KeyValueStorage( string &input, string &output ) {
 
                     // do all get cmds and output result to output file
                     for ( LL count = 0; count < numOfGets; ++count, ++begin ) {
-                        string value = GetValueByKey( std::to_string( begin ), ( cmdIndex++ ) % 10 );
+                        string value = GetValueByKey( std::to_string( begin ), cmdIndex );
                         if ( isFirstCmd == true ) {
                             isFirstCmd = false;
                             KeyValueStorage::fout << value.c_str();
