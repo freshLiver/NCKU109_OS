@@ -5,4 +5,5 @@ all:
 
 rm:
 	rm ./*.output
+	rm ./*.o
 	rm -r ./db/
