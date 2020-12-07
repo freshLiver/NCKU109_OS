@@ -9,23 +9,19 @@
  * @return string return output filename with extension(.output)
  */
 string GetOutputName( string inputName ) {
-    string res( inputName.size() + 1, '\0' );
-    int dotEnd = inputName.size() - 5;
 
-    // copy string before "input"
-    for ( int i = 0; i < dotEnd; ++i )
-        res[i] = inputName[i];
+    string filename = "";
 
-    // copy ".input" and right shift 1 char
-    for ( int i = dotEnd; i < res.size(); ++i )
-        res[i] = inputName[i - 1];
+    for ( int in = 0, out = 0; inputName[in] != '\0'; ++in, ++out ) {
+        if ( inputName[in] == '/' )
+            filename = "";
+        else
+            filename += inputName[in];
+    }
 
-    // .in -> out
-    res[dotEnd++] = 'o';
-    res[dotEnd++] = 'u';
-    res[dotEnd++] = 't';
+    string outputName = filename.substr( 0, filename.length() - 5 ) + "output";
 
-    return res;
+    return outputName;
 }
 
 /**
