@@ -15,7 +15,7 @@ using std::string;
 using std::map;
 using std::pair;
 
-#define MaxBufSize 20000
+#define MaxBufSize 200000
 #define DBNum 10
 
 class KeyValueStorage {

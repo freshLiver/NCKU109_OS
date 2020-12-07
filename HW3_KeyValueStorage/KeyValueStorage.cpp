@@ -43,6 +43,8 @@ KeyValueStorage::KeyValueStorage( string &input, string &output ) {
         int cmdIndex;
         CmdType cmdType;
         string cmd;
+        printf( "now %d\n", progress );
+        progress += MaxBufSize;
         for ( int iCmd = 0; iCmd < MaxBufSize && getline( KeyValueStorage::fin, cmd ); ++iCmd ) {
 
             // read a cmd and quick parse it immediately
