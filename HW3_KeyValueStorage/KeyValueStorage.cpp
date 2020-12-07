@@ -8,8 +8,13 @@ using std::make_tuple;
 ***********************************************/
 
 pair<long, string> FindKeyLineEndFrom( fstream &db, string key );
-void UpdateDBFromPutBuffer( map<string, string> &mPutBuf, int &dbID );
+void UpdateDBFromPutBuffer( map<string, string> &mPutBuf, int dbID );
 string GetValueByKey( string key, int dbID );
+
+static void Threading( queue<string> &qTodoPUTs, map<string, string> &mPutBuf, int id ) {
+    KeyValueStorage::ParseTodoBuffer( qTodoPUTs, mPutBuf, id );
+    UpdateDBFromPutBuffer( mPutBuf, id );
+}
 
 string *KeyValueStorage::cmdBuffer;
 fstream KeyValueStorage::fin, KeyValueStorage::fout;
@@ -73,16 +78,8 @@ KeyValueStorage::KeyValueStorage( string &input, string &output ) {
 
                     // parse cmds in todo queue
                     thread ths[10];
-
-                    for ( int dbID = 0; dbID < DBNum; ++dbID )
-                        ths[dbID] = thread( ParseTodoBuffer, qTodoBuf[dbID], mPutBuf[dbID], dbID );
-
-                    for ( int thID = 0; thID < DBNum; ++thID )
-                        ths[thID].join();
-
-                    // update put commands in put buffer
-                    for ( int dbID = 0; dbID < DBNum; ++dbID )
-                        ths[dbID] = thread( UpdateDBFromPutBuffer, mPutBuf[dbID], dbID );
+                    for ( int id = 0; id < DBNum; ++id )
+                        ths[id] = thread( Threading, std::ref( qTodoBuf[id] ), std::ref( mPutBuf[id] ), id );
 
                     for ( int thID = 0; thID < DBNum; ++thID )
                         ths[thID].join();
@@ -109,7 +106,7 @@ KeyValueStorage::KeyValueStorage( string &input, string &output ) {
 **************** private methods ****************
 ************************************************/
 
-void KeyValueStorage::ParseTodoBuffer( queue<string> &qTodoBuf, map<string, string> &mPutBuf, int &dbID ) {
+void KeyValueStorage::ParseTodoBuffer( queue<string> &qTodoBuf, map<string, string> &mPutBuf, int dbID ) {
     string cmd, key, value;
     while ( qTodoBuf.empty() == false ) {
 
@@ -248,7 +245,7 @@ pair<long, string> FindKeyLineEndFrom( fstream &db, string key ) {
 }
 
 
-void UpdateDBFromPutBuffer( map<string, string> &mPutBuf, int &dbID ) {
+void UpdateDBFromPutBuffer( map<string, string> &mPutBuf, int dbID ) {
 
     // where is my db
     string myDBPath = "./db/db0";

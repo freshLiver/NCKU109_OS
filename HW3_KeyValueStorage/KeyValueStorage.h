@@ -7,15 +7,15 @@
 #include <map>
 #include <queue>
 #include <string>
-#include <unistd.h>
 #include <thread>
+#include <unistd.h>
 
 using std::fstream;
-using std::queue;
-using std::thread;
-using std::string;
 using std::map;
 using std::pair;
+using std::queue;
+using std::string;
+using std::thread;
 
 #define MaxBufSize 200000
 #define DBNum 10
@@ -36,8 +36,7 @@ class KeyValueStorage {
      */
     KeyValueStorage( string &input, string &output );
 
-  private:
-    static void ParseTodoBuffer( queue<string> &qTodoBuf, map<string, string> &mPutBuf, int &dbID );
+    static void ParseTodoBuffer( queue<string> &qTodoBuf, map<string, string> &mPutBuf, int dbID );
 
     /**
      * @brief 一次讀取最多 N lines command 並存在 buffer 中，直到 eof
@@ -50,6 +49,7 @@ class KeyValueStorage {
     static int ReadNCommands( fstream &fin, int maxLine, string cmdBuffer[] );
 
 
+  private:
     /**
      * @brief command 屬於哪類指令、應該分到哪個 index
      *
