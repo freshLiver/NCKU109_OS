@@ -72,12 +72,20 @@ KeyValueStorage::KeyValueStorage( string &input, string &output ) {
                         numOfGets = stoll( parseResult.second ) - begin + 1;
 
                     // parse cmds in todo queue
+                    thread ths[10];
+
                     for ( int dbID = 0; dbID < DBNum; ++dbID )
-                        ParseTodoBuffer( qTodoBuf[dbID], mPutBuf[dbID], dbID );
+                        ths[dbID] = thread( ParseTodoBuffer, qTodoBuf[dbID], mPutBuf[dbID], dbID );
+
+                    for ( int thID = 0; thID < DBNum; ++thID )
+                        ths[thID].join();
 
                     // update put commands in put buffer
                     for ( int dbID = 0; dbID < DBNum; ++dbID )
-                        UpdateDBFromPutBuffer( mPutBuf[dbID], dbID );
+                        ths[dbID] = thread( UpdateDBFromPutBuffer, mPutBuf[dbID], dbID );
+
+                    for ( int thID = 0; thID < DBNum; ++thID )
+                        ths[thID].join();
 
                     // do all get cmds and output result to output file
                     for ( LL count = 0; count < numOfGets; ++count, ++begin ) {

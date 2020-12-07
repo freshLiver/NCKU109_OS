@@ -8,9 +8,11 @@
 #include <queue>
 #include <string>
 #include <unistd.h>
+#include <thread>
 
 using std::fstream;
 using std::queue;
+using std::thread;
 using std::string;
 using std::map;
 using std::pair;
