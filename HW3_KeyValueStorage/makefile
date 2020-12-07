@@ -4,6 +4,6 @@ all:
 	g++ -g -std=c++14 -pthread KeyValueStorage.o main.o -o main
 
 rm:
-	rm ./*.output
-	rm ./*.o
-	rm -r ./db/
+	rm -f ./*.output
+	rm -f ./*.o
+	rm -rf ./db/

@@ -48,9 +48,12 @@ KeyValueStorage::KeyValueStorage( string &input, string &output ) {
         int cmdIndex;
         CmdType cmdType;
         string cmd;
-        printf( "now %d\n", progress );
-        progress += MaxBufSize;
+
+        // sequential read command
         for ( int iCmd = 0; iCmd < MaxBufSize && getline( KeyValueStorage::fin, cmd ); ++iCmd ) {
+            if ( progress % 10000 == 0 )
+                printf( "now : %d\n", progress );
+            progress++;
 
             // read a cmd and quick parse it immediately
             std::tie( cmdType, cmdIndex ) = KeyValueStorage::QuickParseCmd( cmd );
