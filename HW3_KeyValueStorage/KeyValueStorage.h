@@ -3,21 +3,28 @@
 
 #include "macros.h"
 #include <cstdio>
+#include <cstdlib>
+#include <ctime>
 #include <fstream>
+#include <iterator>
 #include <map>
 #include <queue>
+#include <set>
 #include <string>
 #include <thread>
 #include <unistd.h>
 
 using std::fstream;
+using std::iterator;
 using std::map;
 using std::pair;
 using std::queue;
+using std::set;
 using std::string;
 using std::thread;
 
 #define MaxBufSize 200000
+#define MaxCacheSize 100000
 #define DBNum 10
 
 class KeyValueStorage {
@@ -26,6 +33,9 @@ public:
 private:
     static fstream fin, fout;
     static string *cmdBuffer;
+    static map<string, long> *lineEndCache;
+    static set<string> *usedPool;
+    static set<string> *victimPool;
 
 public:
     /**
@@ -37,16 +47,6 @@ public:
     KeyValueStorage( string &input, string &output );
 
     static void ParseTodoBuffer( queue<string> &qTodoBuf, map<string, string> &mPutBuf, int dbID );
-
-    /**
-     * @brief 一次讀取最多 N lines command 並存在 buffer 中，直到 eof
-     *
-     * @param fin       input file fstream
-     * @param maxLine   最大讀取 line 數
-     * @param cmdBuffer 讀取的 cmd 得暫存器，大小應比 maxLine 大
-     * @return int      eof 時讀取了幾行，非 eof 時必為 maxLine
-     */
-    static int ReadNCommands( fstream &fin, int maxLine, string cmdBuffer[] );
 
     static void UpdateDBFromPutBuffer( map<string, string> &mPutBuf, int dbID );
 
@@ -69,7 +69,14 @@ private:
      * @param delim 終止字符，用來判斷 key 的結尾（應為 ' ' 或是 '\0'）
      * @return int delim 的下一個 char 的 index，用於 SCAN 抓 key2
      */
-    static int GetKeyFromCmd( string &cmd, string &key, int start, char delim );
+    static int GetKeyFromCmd( string &cmd, string &key, int start, char delim ) {
+        for ( int iCmd = start, iKey = 0;; ++iCmd, ++iKey ) {
+            if ( cmd[iCmd] == delim )
+                return ++iCmd;
+            else
+                key[iKey] = cmd[iCmd];
+        }
+    }
 
 
     /**
@@ -79,7 +86,10 @@ private:
      * @param value 128 chars 的 value 會儲存在這裡面，大小應為 128 chars
      * @param start 從哪個 index 開始抓 128 個 chars
      */
-    static void GetValueFromCmd( string &cmd, string &value, int start );
+    static void GetValueFromCmd( string &cmd, string &value, int start ) {
+        for ( int iCmd = start, iValue = 0; iValue < 128; ++iCmd, ++iValue )
+            value[iValue] = cmd[iCmd];
+    }
 
 
     /**
@@ -95,7 +105,7 @@ private:
     static string GetValueByKey( string key, int dbID );
 
 
-    static pair<long, string> FindKeyLineEndFrom( fstream &db, string key );
+    static pair<long, string> FindKeyLineEndFrom( fstream &db, string key, int dbID );
 };
 
 #endif        // KEYVALUESTORAGE_H
