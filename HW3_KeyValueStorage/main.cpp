@@ -9,23 +9,19 @@
  * @return string return output filename with extension(.output)
  */
 string GetOutputName( string inputName ) {
-    string res( inputName.size() + 1, '\0' );
-    int dotEnd = inputName.size() - 5;
 
-    // copy string before "input"
-    for ( int i = 0; i < dotEnd; ++i )
-        res[i] = inputName[i];
+    string filename = "";
 
-    // copy ".input" and right shift 1 char
-    for ( int i = dotEnd; i < res.size(); ++i )
-        res[i] = inputName[i - 1];
+    for ( int in = 0, out = 0; inputName[in] != '\0'; ++in, ++out ) {
+        if ( inputName[in] == '/' )
+            filename = "";
+        else
+            filename += inputName[in];
+    }
 
-    // .in -> out
-    res[dotEnd++] = 'o';
-    res[dotEnd++] = 'u';
-    res[dotEnd++] = 't';
+    string outputName = filename.substr( 0, filename.length() - 5 ) + "output";
 
-    return res;
+    return outputName;
 }
 
 /**
@@ -36,21 +32,27 @@ string GetOutputName( string inputName ) {
  * @return int
  */
 int main( int argc, char const *argv[] ) {
-    time_t start, finish;
 
-    // start counting time
-    start = time( NULL );
+    try {
+        time_t start, finish;
 
-    // get input and output file name with ext as std::string
-    string inputFilename( argv[1] );
-    string outputFileName( GetOutputName( inputFilename ) );
+        // start counting time
+        start = time( NULL );
 
-    // pass input and output to KVS instance
-    KeyValueStorage( inputFilename, outputFileName );
+        // get input and output file name with ext as std::string
+        string inputFilename( argv[1] );
+        string outputFileName( GetOutputName( inputFilename ) );
 
-    // get finish time, and calc time cost
-    finish = time( NULL );
-    printf( "Total Time Cost : %ld secs.\n", finish - start );
+        // pass input and output to KVS instance
+        KeyValueStorage( inputFilename, outputFileName );
+
+        // get finish time, and calc time cost
+        finish = time( NULL );
+        printf( "Total Time Cost : %ld secs.\n", finish - start );
+    }
+    catch ( std::exception &e ) {
+        printf( "err : %s\n", e.what() );
+    }
 
     return 0;
 }

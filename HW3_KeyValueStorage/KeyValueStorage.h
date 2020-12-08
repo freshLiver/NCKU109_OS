@@ -1,33 +1,31 @@
 #if !defined( KEYVALUESTORAGE_H )
 #define KEYVALUESTORAGE_H
 
-#include "DBWorker.h"
 #include "macros.h"
 #include <cstdio>
-#include <exception>
 #include <fstream>
-#include <mutex>
+#include <map>
 #include <queue>
 #include <string>
 #include <thread>
-#include <tuple>
-#include <vector>
+#include <unistd.h>
 
 using std::fstream;
+using std::map;
+using std::pair;
 using std::queue;
 using std::string;
 using std::thread;
-using std::tuple;
-using std::vector;
+
+#define MaxBufSize 200000
+#define DBNum 10
 
 class KeyValueStorage {
 
 public:
 private:
-    static string inputFile, outputFile;
-    static thread workerThreads[10];
-    static queue<string> workerTODO[10];
-    static std::mutex workerLock[10];
+    static fstream fin, fout;
+    static string *cmdBuffer;
 
 public:
     /**
@@ -38,15 +36,7 @@ public:
      */
     KeyValueStorage( string &input, string &output );
 
-private:
-    /**
-     * @brief 各個 worker 解析 put todo cmds 並且更新資料庫，直到非 put cmd
-     *
-     * @param isPUT 目前 main thread 讀取到的指令是否為 put
-     * @param thID thread id, also worker id
-     */
-    static void ParseUntilNotPUT( bool *isPUT, int thID );
-
+    static void ParseTodoBuffer( queue<string> &qTodoBuf, map<string, string> &mPutBuf, int dbID );
 
     /**
      * @brief 一次讀取最多 N lines command 並存在 buffer 中，直到 eof
@@ -56,16 +46,18 @@ private:
      * @param cmdBuffer 讀取的 cmd 得暫存器，大小應比 maxLine 大
      * @return int      eof 時讀取了幾行，非 eof 時必為 maxLine
      */
-    static int ReadNCommands( fstream *fin, int maxLine, string cmdBuffer[] );
+    static int ReadNCommands( fstream &fin, int maxLine, string cmdBuffer[] );
 
+    static void UpdateDBFromPutBuffer( map<string, string> &mPutBuf, int dbID );
 
+private:
     /**
      * @brief command 屬於哪類指令、應該分到哪個 index
      *
      * @param cmd command
      * @return tuple<CmdType, int> cmd 的 type 以及所屬 db index
      */
-    static tuple<CmdType, int> QuickParseCmd( string &cmd );
+    static pair<CmdType, int> QuickParseCmd( string &cmd );
 
 
     /**
@@ -82,7 +74,7 @@ private:
 
     /**
      * @brief 從 cmd[start] 開始抓 128 chars 的 value string
-     *
+     *GetValueByKey
      * @param cmd command
      * @param value 128 chars 的 value 會儲存在這裡面，大小應為 128 chars
      * @param start 從哪個 index 開始抓 128 個 chars
@@ -97,7 +89,13 @@ private:
      * @param cmd command
      * @return tuple<string, string> command 的 key, value(or key2)
      */
-    static tuple<string, string> ParseCommandAs( CmdType type, string &cmd );
+    static pair<string, string> ParseCommandAs( CmdType type, string &cmd );
+
+
+    static string GetValueByKey( string key, int dbID );
+
+
+    static pair<long, string> FindKeyLineEndFrom( fstream &db, string key );
 };
 
 #endif        // KEYVALUESTORAGE_H
