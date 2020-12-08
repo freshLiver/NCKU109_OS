@@ -10,7 +10,7 @@
             "request": "launch",
             "program": "${fileDirname}/main",
             "args": [
-                "./hw3example.input",
+                "./test.input",
             ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",

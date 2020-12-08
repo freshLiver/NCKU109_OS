@@ -15,10 +15,10 @@ map<string, long> *KeyValueStorage::lineEndCache;
 set<string> *KeyValueStorage::usedPool;
 set<string> *KeyValueStorage::victimPool;
 
-static void Threading( queue<string> &qTodoPUTs, map<string, string> &mPutBuf, int id ) {
-    KeyValueStorage::ParseTodoBuffer( qTodoPUTs, mPutBuf, id );
-    KeyValueStorage::UpdateDBFromPutBuffer( mPutBuf, id );
-}
+// static void Threading( queue<string> &qTodoPUTs, map<string, string> &mPutBuf, int id ) {
+//     KeyValueStorage::ParseTodoBuffer( qTodoPUTs, mPutBuf, id );
+//     KeyValueStorage::UpdateDBFromPutBuffer( mPutBuf, id );
+// }
 
 void TouchFiles() {
     // check if db dir exists
@@ -95,13 +95,12 @@ KeyValueStorage::KeyValueStorage( string &input, string &output ) {
                     if ( cmdType == SCAN )
                         numOfGets = stoll( parseResult.second ) - begin + 1;
 
-                    // parse cmds in todo queue
-                    thread ths[10];
-                    for ( int id = 0; id < DBNum; ++id )
-                        ths[id] = thread( Threading, std::ref( qTodoBuf[id] ), std::ref( mPutBuf[id] ), id );
+                    for ( int id = 0; id < DBNum; ++id ) {
+                        // ths[id] = thread( Threading, std::ref( qTodoBuf[id] ), std::ref( mPutBuf[id] ), id );
+                        KeyValueStorage::ParseTodoBuffer( qTodoBuf[id], mPutBuf[id], id );
+                        KeyValueStorage::UpdateDBFromPutBuffer( mPutBuf[id], id );
+                    }
 
-                    for ( int thID = 0; thID < DBNum; ++thID )
-                        ths[thID].join();
 
                     // do all get cmds and output result to output file
                     for ( LL count = 0; count < numOfGets; ++count, ++begin ) {
@@ -222,10 +221,10 @@ pair<long, string> KeyValueStorage::FindKeyLineEndFrom( fstream &db, string key,
     // if find in cache, set line end
     if ( cacheResult != KeyValueStorage::lineEndCache[dbID].end() ) {
 
-        // move to used pool if in victim pool
+        // 把 key 從 victim 移動到 used pool
         auto itVictim = KeyValueStorage::victimPool[dbID].find( key );
         if ( itVictim != KeyValueStorage::victimPool[dbID].end() ) {
-            KeyValueStorage::victimPool[dbID].erase( itVictim );
+            KeyValueStorage::victimPool[dbID].erase( key );
             KeyValueStorage::usedPool[dbID].insert( key );
         }
 
@@ -258,9 +257,11 @@ pair<long, string> KeyValueStorage::FindKeyLineEndFrom( fstream &db, string key,
                 long lineEnd = db.tellg();
 
 
-                // 如果 cache 沒滿，就直接將 <key, lineEnd> insert 進 cache
-                if ( KeyValueStorage::lineEndCache[dbID].size() < MaxCacheSize )
+                // 如果 cache 沒滿，就直接將 <key, lineEnd> insert 進 cache 以及 victim pool
+                if ( KeyValueStorage::lineEndCache[dbID].size() < MaxCacheSize ) {
                     KeyValueStorage::lineEndCache[dbID].insert( make_pair( key, lineEnd ) );
+                    KeyValueStorage::victimPool[dbID].insert( key );
+                }
 
                 // 如果 cache 滿了，隨機選一個 victim 替換掉
                 else {
@@ -277,15 +278,16 @@ pair<long, string> KeyValueStorage::FindKeyLineEndFrom( fstream &db, string key,
                     KeyValueStorage::victimPool[dbID].erase( itVictim );
                     KeyValueStorage::lineEndCache[dbID].erase( key );
 
-                    // 插入 <key, lineEnd> 到 cache
+                    // 插入 <key, lineEnd> 到 cache 以及 victim pool
+                    KeyValueStorage::victimPool[dbID].insert( key );
                     KeyValueStorage::lineEndCache[dbID].insert( make_pair( key, lineEnd ) );
                 }
 
-                return pair<long, string>( lineEnd, tmp );
+                return make_pair( lineEnd, tmp );
             }
         }
 
-        return pair<long, string>( -1, "EMPTY" );
+        return make_pair( -1, "EMPTY" );
     }
 }
 
