@@ -3,21 +3,24 @@
 using std::get;
 using std::make_tuple;
 
+
+
 /***********************************************
-**************** public methods ****************
+**************** Initialization ****************
 ***********************************************/
+string *KeyValueStorage::cmdBuffer;
+fstream KeyValueStorage::fin, KeyValueStorage::fout;
+
+map<string, long> *KeyValueStorage::lineEndCache;
+set<string> *KeyValueStorage::usedPool;
+set<string> *KeyValueStorage::victimPool;
 
 static void Threading( queue<string> &qTodoPUTs, map<string, string> &mPutBuf, int id ) {
     KeyValueStorage::ParseTodoBuffer( qTodoPUTs, mPutBuf, id );
     KeyValueStorage::UpdateDBFromPutBuffer( mPutBuf, id );
 }
 
-string *KeyValueStorage::cmdBuffer;
-fstream KeyValueStorage::fin, KeyValueStorage::fout;
-
-
-KeyValueStorage::KeyValueStorage( string &input, string &output ) {
-
+void TouchFiles() {
     // check if db dir exists
     system( "mkdir ./db/" );
     for ( int dbID = 0; dbID < 10; ++dbID ) {
@@ -25,6 +28,16 @@ KeyValueStorage::KeyValueStorage( string &input, string &output ) {
         touchCmd[touchCmd.length() - 1] = '0' + dbID;
         system( touchCmd.c_str() );
     }
+}
+
+/***********************************************
+**************** public methods ****************
+***********************************************/
+
+
+KeyValueStorage::KeyValueStorage( string &input, string &output ) {
+
+    TouchFiles();
 
     // open input output file in read mode
     bool isFirstCmd = true;
@@ -34,6 +47,11 @@ KeyValueStorage::KeyValueStorage( string &input, string &output ) {
     // init cmd buffer, todo queue, put buffer
     queue<string> qTodoBuf[DBNum];
     map<string, string> mPutBuf[DBNum];
+
+    // init cache and pools
+    KeyValueStorage::lineEndCache = new map<string, long>[DBNum];
+    KeyValueStorage::victimPool = new set<string>[DBNum];
+    KeyValueStorage::usedPool = new set<string>[DBNum];
 
     // read commands to buffer until EOF
     int numOfCmds;
@@ -101,46 +119,11 @@ KeyValueStorage::KeyValueStorage( string &input, string &output ) {
     KeyValueStorage::fout.flush();
     KeyValueStorage::fout.close();
 }
+
+
 /************************************************
 **************** private methods ****************
 ************************************************/
-
-void KeyValueStorage::ParseTodoBuffer( queue<string> &qTodoBuf, map<string, string> &mPutBuf, int dbID ) {
-    string cmd, key, value;
-    while ( qTodoBuf.empty() == false ) {
-
-        // get and pop front cmd
-        cmd = qTodoBuf.front();
-        qTodoBuf.pop();
-
-        // get key and value, and push to put buffer
-        std::tie( key, value ) = KeyValueStorage::ParseCommandAs( PUT, cmd );
-
-
-        auto iterValue = mPutBuf.find( key );
-        // if not in buffer -> insert
-        if ( iterValue == mPutBuf.end() )
-            mPutBuf.insert( pair<string, string>( key, value ) );
-
-        // if already in put buffer -> update
-        else
-            iterValue->second = value;
-    }
-}
-
-int KeyValueStorage::ReadNCommands( fstream &fin, int maxLines, string *cmdBuffer ) {
-    // 一次讀最多 maxLines lines 到 buffer 中
-    int count;
-    for ( count = 0; count < maxLines; ++count ) {
-        std::getline( fin, cmdBuffer[count] );
-        if ( fin.eof() == true )
-            break;
-    }
-
-    // 檢查 eof, 如果 eof 就回傳 count 數量
-    return fin.eof() ? count : maxLines;
-}
-
 
 pair<CmdType, int> KeyValueStorage::QuickParseCmd( string &cmd ) {
     int keyPos;
@@ -172,24 +155,7 @@ pair<CmdType, int> KeyValueStorage::QuickParseCmd( string &cmd ) {
         }
 
     // 回傳型別以及最後一個數字
-    // DEBUG( "quick parse result : type %d, index %c, \ncmd :%s", type, lastChar, cmd.c_str() );
     return pair<CmdType, int>( type, lastChar - '0' );
-}
-
-
-int KeyValueStorage::GetKeyFromCmd( string &cmd, string &key, int start, char delim ) {
-    for ( int iCmd = start, iKey = 0;; ++iCmd, ++iKey ) {
-        if ( cmd[iCmd] == delim )
-            return ++iCmd;
-        else
-            key[iKey] = cmd[iCmd];
-    }
-}
-
-
-void KeyValueStorage::GetValueFromCmd( string &cmd, string &value, int start ) {
-    for ( int iCmd = start, iValue = 0; iValue < 128; ++iCmd, ++iValue )
-        value[iValue] = cmd[iCmd];
 }
 
 
@@ -219,7 +185,29 @@ pair<string, string> KeyValueStorage::ParseCommandAs( CmdType type, string &cmd 
 }
 
 
-// not members
+void KeyValueStorage::ParseTodoBuffer( queue<string> &qTodoBuf, map<string, string> &mPutBuf, int dbID ) {
+    string cmd, key, value;
+    while ( qTodoBuf.empty() == false ) {
+
+        // get and pop front cmd
+        cmd = qTodoBuf.front();
+        qTodoBuf.pop();
+
+        // get key and value, and push to put buffer
+        std::tie( key, value ) = KeyValueStorage::ParseCommandAs( PUT, cmd );
+
+
+        auto iterValue = mPutBuf.find( key );
+        // if not in buffer -> insert
+        if ( iterValue == mPutBuf.end() )
+            mPutBuf.insert( pair<string, string>( key, value ) );
+
+        // if already in put buffer -> update
+        else
+            iterValue->second = value;
+    }
+}
+
 
 pair<long, string> KeyValueStorage::FindKeyLineEndFrom( fstream &db, string key ) {
 
@@ -256,6 +244,8 @@ void KeyValueStorage::UpdateDBFromPutBuffer( map<string, string> &mPutBuf, int d
 
     // update all put cmds in buffer map
     for ( auto &pKV : mPutBuf ) {
+
+        // TODO check cache 
 
         // check if this key in db
         reader.clear();
@@ -294,6 +284,8 @@ void KeyValueStorage::UpdateDBFromPutBuffer( map<string, string> &mPutBuf, int d
     db.close();
 }
 
+
+
 string KeyValueStorage::GetValueByKey( string key, int dbID ) {
 
     // where is my db
@@ -311,9 +303,6 @@ string KeyValueStorage::GetValueByKey( string key, int dbID ) {
         return "EMPTY";
 
     // 如果有找到 key 就抓 keyline(res.second) 最後 128 個 char(不含\n)
-    char value[129];
-    for ( int iValue = 0, iCmd = ( result.second.length() - 128 ); iValue < 128; ++iValue, ++iCmd )
-        value[iValue] = result.second[iCmd];
-    value[128] = '\0';
-    return string( value );
+    int len = result.second.length();
+    return result.second.substr( len - 128, 128 );
 }
