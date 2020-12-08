@@ -1,8 +1,8 @@
 #include "KeyValueStorage.h"
 
 using std::get;
+using std::make_pair;
 using std::make_tuple;
-
 
 
 /***********************************************
@@ -36,6 +36,8 @@ void TouchFiles() {
 
 
 KeyValueStorage::KeyValueStorage( string &input, string &output ) {
+
+    srand( time( NULL ) );
 
     TouchFiles();
 
@@ -209,26 +211,82 @@ void KeyValueStorage::ParseTodoBuffer( queue<string> &qTodoBuf, map<string, stri
 }
 
 
-pair<long, string> KeyValueStorage::FindKeyLineEndFrom( fstream &db, string key ) {
+pair<long, string> KeyValueStorage::FindKeyLineEndFrom( fstream &db, string key, int dbID ) {
 
     // 清除 eof flag 並回到檔案開頭
     db.clear();
-    db.seekg( 0, std::ios::beg );
 
-    // 依據查詢各行
-    for ( string tmp; getline( db, tmp ); ) {
+    // 檢查 cache
+    auto cacheResult = KeyValueStorage::lineEndCache[dbID].find( key );
 
-        // 比對該行 key
-        bool sameKey = true;
-        for ( int i = 0; ( key[i] != '\0' ) && sameKey; ++i )
-            sameKey = ( key[i] == tmp[i] );
+    // if find in cache, set line end
+    if ( cacheResult != KeyValueStorage::lineEndCache[dbID].end() ) {
 
-        // 若 key 完全相同就回傳結果
-        if ( sameKey )
-            return pair<long, string>( db.tellg(), tmp );
+        // move to used pool if in victim pool
+        auto itVictim = KeyValueStorage::victimPool[dbID].find( key );
+        if ( itVictim != KeyValueStorage::victimPool[dbID].end() ) {
+            KeyValueStorage::victimPool[dbID].erase( itVictim );
+            KeyValueStorage::usedPool[dbID].insert( key );
+        }
+
+        // move read pointer to value[0]
+        db.seekg( cacheResult->second - 129 );
+
+        // read 128 values
+        char value[129];
+        db.read( value, 128 );
+        value[128] = '\0';
+
+        // return line end and value
+        return make_pair( cacheResult->second, string( value ) );
     }
 
-    return pair<long, string>( -1, "EMPTY" );
+    // if not in cache
+    else {
+        db.seekg( 0, std::ios::beg );
+
+        // 依據查詢各行
+        for ( string tmp; getline( db, tmp ); ) {
+
+            // 比對該行 key
+            bool sameKey = true;
+            for ( int i = 0; ( key[i] != '\0' ) && sameKey; ++i )
+                sameKey = ( key[i] == tmp[i] );
+
+            // 若 key 完全相同，代表在 db 中
+            if ( sameKey ) {
+                long lineEnd = db.tellg();
+
+
+                // 如果 cache 沒滿，就直接將 <key, lineEnd> insert 進 cache
+                if ( KeyValueStorage::lineEndCache[dbID].size() < MaxCacheSize )
+                    KeyValueStorage::lineEndCache[dbID].insert( make_pair( key, lineEnd ) );
+
+                // 如果 cache 滿了，隨機選一個 victim 替換掉
+                else {
+
+                    // 如果 victim 沒東西，重設所有 victim
+                    if ( KeyValueStorage::victimPool[dbID].empty() == true )
+                        KeyValueStorage::victimPool[dbID].swap( KeyValueStorage::usedPool[dbID] );
+
+                    // 隨機選一個 victim
+                    auto itVictim = KeyValueStorage::victimPool[dbID].begin();
+                    std::advance( itVictim, random() % KeyValueStorage::victimPool[dbID].size() );
+
+                    // 從 cache 以及 victim pool 刪除 victim
+                    KeyValueStorage::victimPool[dbID].erase( itVictim );
+                    KeyValueStorage::lineEndCache[dbID].erase( key );
+
+                    // 插入 <key, lineEnd> 到 cache
+                    KeyValueStorage::lineEndCache[dbID].insert( make_pair( key, lineEnd ) );
+                }
+
+                return pair<long, string>( lineEnd, tmp );
+            }
+        }
+
+        return pair<long, string>( -1, "EMPTY" );
+    }
 }
 
 
@@ -245,12 +303,10 @@ void KeyValueStorage::UpdateDBFromPutBuffer( map<string, string> &mPutBuf, int d
     // update all put cmds in buffer map
     for ( auto &pKV : mPutBuf ) {
 
-        // TODO check cache 
-
         // check if this key in db
         reader.clear();
         reader.seekg( 0, std::ios_base::beg );
-        long lineEnd = KeyValueStorage::FindKeyLineEndFrom( reader, pKV.first ).first;
+        long lineEnd = KeyValueStorage::FindKeyLineEndFrom( reader, pKV.first, dbID ).first;
 
         // if already in db, update
         if ( lineEnd != -1 ) {
@@ -294,7 +350,7 @@ string KeyValueStorage::GetValueByKey( string key, int dbID ) {
 
     // 開啟並從自己的 db 中搜尋這個 key
     fstream reader( myDBPath.c_str(), std::ios_base::in );
-    auto result = KeyValueStorage::FindKeyLineEndFrom( reader, key );
+    auto result = KeyValueStorage::FindKeyLineEndFrom( reader, key, dbID );
     reader.clear();
     reader.close();
 
