@@ -1,6 +1,7 @@
 #include "KeyValueStorage.h"
 
 using std::get;
+using std::ref;
 using std::make_pair;
 using std::make_tuple;
 
@@ -62,7 +63,8 @@ KeyValueStorage::KeyValueStorage( string &input, string &output ) {
 
         // sequential read command
         bool isPUT = true;
-        for ( int iCmd = 0; isPUT && iCmd < MaxBufSize && getline( KeyValueStorage::fin, cmd ); ++iCmd ) {
+        int iCmd = 0;
+        for ( ; isPUT && iCmd < MaxBufSize && getline( KeyValueStorage::fin, cmd ); ++iCmd ) {
             if ( progress % 10000 == 0 )
                 printf( "now : %d\n", progress );
             progress++;
@@ -78,11 +80,24 @@ KeyValueStorage::KeyValueStorage( string &input, string &output ) {
                 isPUT = false;
         }
 
-        // 處理累積的 PUT 指令
-        for ( int id = 0; id < DBNum; ++id ) {
-            KeyValueStorage::ParseTodoBuffer( qTodoBuf[id], mPutBuf[id], id );
-            KeyValueStorage::UpdateDBFromPutBuffer( mPutBuf[id], id );
+        // 根據 iCmd 大小（連續 PUT 數量）決定要用哪種方式處理累積的 PUT 指令
+        if ( iCmd >= ThreadingThreshold ) {
+            thread ths[10];
+            for ( int id = 0; id < DBNum; ++id )
+                ths[id] = thread( KeyValueStorage::ParseTodoBuffer, ref( qTodoBuf[id] ), ref( mPutBuf[id] ), id );
+
+            for ( int id = 0; id < DBNum; ++id )
+                ths[id].join();
         }
+        // 連續 PUT 太少，不如 sequential
+        else {
+            for ( int id = 0; id < DBNum; ++id )
+                KeyValueStorage::ParseTodoBuffer( qTodoBuf[id], mPutBuf[id], id );
+        }
+
+        for ( int id = 0; id < DBNum; ++id )
+            KeyValueStorage::UpdateDBFromPutBuffer( mPutBuf[id], id );
+
 
         // ! 檢查 cmd type (檢查是 buffer 滿了跳出還是遇到 GET, SCAN)
         if ( isPUT == false ) {

@@ -25,6 +25,7 @@ using std::thread;
 
 #define MaxBufSize 1000000
 #define MaxCacheSize 100000
+#define ThreadingThreshold 1000
 #define DBNum 10
 
 class KeyValueStorage {
