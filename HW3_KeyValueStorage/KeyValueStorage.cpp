@@ -15,11 +15,6 @@ map<string, long> *KeyValueStorage::lineEndCache;
 set<string> *KeyValueStorage::usedPool;
 set<string> *KeyValueStorage::victimPool;
 
-// static void Threading( queue<string> &qTodoPUTs, map<string, string> &mPutBuf, int id ) {
-//     KeyValueStorage::ParseTodoBuffer( qTodoPUTs, mPutBuf, id );
-//     KeyValueStorage::UpdateDBFromPutBuffer( mPutBuf, id );
-// }
-
 void TouchFiles() {
     // check if db dir exists
     system( "mkdir ./db/" );
@@ -66,7 +61,8 @@ KeyValueStorage::KeyValueStorage( string &input, string &output ) {
         string cmd;
 
         // sequential read command
-        for ( int iCmd = 0; iCmd < MaxBufSize && getline( KeyValueStorage::fin, cmd ); ++iCmd ) {
+        bool isPUT = true;
+        for ( int iCmd = 0; isPUT && iCmd < MaxBufSize && getline( KeyValueStorage::fin, cmd ); ++iCmd ) {
             if ( progress % 10000 == 0 )
                 printf( "now : %d\n", progress );
             progress++;
@@ -75,44 +71,38 @@ KeyValueStorage::KeyValueStorage( string &input, string &output ) {
             std::tie( cmdType, cmdIndex ) = KeyValueStorage::QuickParseCmd( cmd );
 
             // check cmd type
-            switch ( cmdType ) {
+            if ( cmdType == PUT )
+                // push to corresponding todo queue
+                qTodoBuf[cmdIndex].push( cmd );
+            else
+                isPUT = false;
+        }
 
-                case PUT:
-                    // push to corresponding todo queue
-                    qTodoBuf[cmdIndex].push( cmd );
-                    break;
+        // 處理累積的 PUT 指令
+        for ( int id = 0; id < DBNum; ++id ) {
+            KeyValueStorage::ParseTodoBuffer( qTodoBuf[id], mPutBuf[id], id );
+            KeyValueStorage::UpdateDBFromPutBuffer( mPutBuf[id], id );
+        }
 
-                case GET:
-                case SCAN:
-                    // start pos and num of gets
-                    LL begin, numOfGets = 1;
+        // ! 檢查 cmd type (檢查是 buffer 滿了跳出還是遇到 GET, SCAN)
+        if ( isPUT == false ) {
 
-                    // parse this command into key, value or key1, key2
-                    auto parseResult = ParseCommandAs( cmdType, cmd );
+            // 把 SCAN, GET generalize 成 begin(key & index) + numOfGets 的形式
+            auto parseResult = ParseCommandAs( cmdType, cmd );
+            LL numOfGets = 1, begin = stoll( parseResult.first );
 
-                    // convert scan and get to begin and numOfGets
-                    begin = stoll( parseResult.first );
-                    if ( cmdType == SCAN )
-                        numOfGets = stoll( parseResult.second ) - begin + 1;
+            if ( cmdType == SCAN )
+                numOfGets = stoll( parseResult.second ) - begin + 1;
 
-                    for ( int id = 0; id < DBNum; ++id ) {
-                        // ths[id] = thread( Threading, std::ref( qTodoBuf[id] ), std::ref( mPutBuf[id] ), id );
-                        KeyValueStorage::ParseTodoBuffer( qTodoBuf[id], mPutBuf[id], id );
-                        KeyValueStorage::UpdateDBFromPutBuffer( mPutBuf[id], id );
-                    }
-
-
-                    // do all get cmds and output result to output file
-                    for ( LL count = 0; count < numOfGets; ++count, ++begin ) {
-                        string value = GetValueByKey( std::to_string( begin ), ( cmdIndex++ ) % 10 );
-                        if ( isFirstCmd == true ) {
-                            isFirstCmd = false;
-                            KeyValueStorage::fout << value.c_str();
-                        }
-                        else
-                            KeyValueStorage::fout << "\n" << value.c_str();
-                    }
-                    break;
+            // 從 begin 開始進行 GET，每次都需要 index++%10 更換 DB
+            for ( LL count = 0; count < numOfGets; ++count, ++begin ) {
+                string value = GetValueByKey( std::to_string( begin ), ( cmdIndex++ ) % 10 );
+                if ( isFirstCmd == true ) {
+                    isFirstCmd = false;
+                    KeyValueStorage::fout << value.c_str();
+                }
+                else
+                    KeyValueStorage::fout << "\n" << value.c_str();
             }
         }
     }
