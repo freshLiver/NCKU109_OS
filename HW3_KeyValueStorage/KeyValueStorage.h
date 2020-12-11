@@ -23,10 +23,10 @@ using std::set;
 using std::string;
 using std::thread;
 
-#define MaxReadBuf 500
+#define MaxReadBuf 50
 #define MaxBufSize 1000000
 #define MaxCacheSize 100000
-#define ThreadingThreshold 10000
+#define ThreadingThreshold 500
 #define DBNum 10
 
 class KeyValueStorage {

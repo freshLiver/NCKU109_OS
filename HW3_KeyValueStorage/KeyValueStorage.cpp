@@ -86,7 +86,7 @@ KeyValueStorage::KeyValueStorage( string &input, string &output ) {
             // lambda for threading
             auto threading = []( queue<string> &qTodoBuf, map<string, string> &mPutBuf, int id ) {
                 KeyValueStorage::ParseTodoBuffer( qTodoBuf, mPutBuf, id );
-                KeyValueStorage::UpdateDBFromPutBuffer( mPutBuf, id );
+                // KeyValueStorage::UpdateDBFromPutBuffer( mPutBuf, id );
             };
 
             thread ths[10];
@@ -96,8 +96,8 @@ KeyValueStorage::KeyValueStorage( string &input, string &output ) {
             for ( int id = 0; id < DBNum; ++id )
                 ths[id].join();
 
-            // for ( int id = 0; id < DBNum; ++id )
-            //     KeyValueStorage::UpdateDBFromPutBuffer( mPutBuf[id], id );
+            for ( int id = 0; id < DBNum; ++id )
+                KeyValueStorage::UpdateDBFromPutBuffer( mPutBuf[id], id );
         }
 
         // 連續 PUT 太少，不如 sequential
@@ -259,7 +259,7 @@ pair<long, string> KeyValueStorage::FindKeyLineEndFrom( fstream &db, string key,
     else {
         db.seekg( 0, std::ios::beg );
 
-        std::streampos lineEnd = 0;
+        long lineEnd = 0;
         string lineCmd;
 
         // make buffer
