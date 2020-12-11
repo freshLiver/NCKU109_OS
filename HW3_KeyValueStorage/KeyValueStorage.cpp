@@ -82,21 +82,27 @@ KeyValueStorage::KeyValueStorage( string &input, string &output ) {
 
         // 根據 iCmd 大小（連續 PUT 數量）決定要用哪種方式處理累積的 PUT 指令
         if ( iCmd >= ThreadingThreshold ) {
+            
+            // lambda for threading
+            auto threading = [] (queue<string> &qTodoBuf, map<string,string> &mPutBuf, int id) {
+                KeyValueStorage::ParseTodoBuffer( qTodoBuf, mPutBuf, id );
+                KeyValueStorage::UpdateDBFromPutBuffer( mPutBuf, id );
+            };
+
             thread ths[10];
             for ( int id = 0; id < DBNum; ++id )
-                ths[id] = thread( KeyValueStorage::ParseTodoBuffer, ref( qTodoBuf[id] ), ref( mPutBuf[id] ), id );
+                ths[id] = thread( threading, ref( qTodoBuf[id] ), ref( mPutBuf[id] ), id );
 
             for ( int id = 0; id < DBNum; ++id )
                 ths[id].join();
         }
         // 連續 PUT 太少，不如 sequential
-        else {
-            for ( int id = 0; id < DBNum; ++id )
+        else
+            for ( int id = 0; id < DBNum; ++id ) {
                 KeyValueStorage::ParseTodoBuffer( qTodoBuf[id], mPutBuf[id], id );
-        }
+                KeyValueStorage::UpdateDBFromPutBuffer( mPutBuf[id], id );
+            }
 
-        for ( int id = 0; id < DBNum; ++id )
-            KeyValueStorage::UpdateDBFromPutBuffer( mPutBuf[id], id );
 
 
         // ! 檢查 cmd type (檢查是 buffer 滿了跳出還是遇到 GET, SCAN)
