@@ -82,9 +82,9 @@ KeyValueStorage::KeyValueStorage( string &input, string &output ) {
 
         // 根據 iCmd 大小（連續 PUT 數量）決定要用哪種方式處理累積的 PUT 指令
         if ( iCmd >= ThreadingThreshold ) {
-            
+
             // lambda for threading
-            auto threading = [] (queue<string> &qTodoBuf, map<string,string> &mPutBuf, int id) {
+            auto threading = []( queue<string> &qTodoBuf, map<string, string> &mPutBuf, int id ) {
                 KeyValueStorage::ParseTodoBuffer( qTodoBuf, mPutBuf, id );
                 KeyValueStorage::UpdateDBFromPutBuffer( mPutBuf, id );
             };
@@ -95,7 +95,11 @@ KeyValueStorage::KeyValueStorage( string &input, string &output ) {
 
             for ( int id = 0; id < DBNum; ++id )
                 ths[id].join();
+
+            // for ( int id = 0; id < DBNum; ++id )
+            //     KeyValueStorage::UpdateDBFromPutBuffer( mPutBuf[id], id );
         }
+
         // 連續 PUT 太少，不如 sequential
         else
             for ( int id = 0; id < DBNum; ++id ) {
@@ -255,50 +259,77 @@ pair<long, string> KeyValueStorage::FindKeyLineEndFrom( fstream &db, string key,
     else {
         db.seekg( 0, std::ios::beg );
 
-        // 依據查詢各行
-        for ( string tmp; getline( db, tmp ); ) {
+        std::streampos lineEnd = 0;
+        string lineCmd;
 
-            // 比對該行 key
-            bool sameKey = true;
-            for ( int i = 0; ( key[i] != '\0' ) && sameKey; ++i )
-                sameKey = ( key[i] == tmp[i] );
+        // make buffer
+        string *readBuffer = new string[MaxReadBuf];
 
-            // 若 key 完全相同，代表在 db 中
-            if ( sameKey ) {
-                long lineEnd = db.tellg();
+        // 依據查詢各行，直到找到 key 或是 eof
+        bool found = false;
+        while ( db.eof() == false && !found ) {
 
+            // read N lines into buffer
+            int count = 0;
+            for ( ; count < MaxReadBuf; ++count )
+                std::getline( db, readBuffer[count] );
 
-                // 如果 cache 沒滿，就直接將 <key, lineEnd> insert 進 cache 以及 victim pool
-                if ( KeyValueStorage::lineEndCache[dbID].size() < MaxCacheSize ) {
-                    KeyValueStorage::lineEndCache[dbID].insert( make_pair( key, lineEnd ) );
-                    KeyValueStorage::victimPool[dbID].insert( key );
+            // try to find key in buffer
+            for ( int iBuffer = 0; iBuffer < count && !found; ++iBuffer ) {
+                // ! move to line end should include \n
+                lineEnd += ( readBuffer[iBuffer].length() + 1 );
+
+                // check key of this line
+                bool sameKey = true;
+                for ( int iKey = 0; sameKey && ( key[iKey] != '\0' ); ++iKey )
+                    sameKey = ( key[iKey] == readBuffer[iBuffer][iKey] );
+
+                // if same key, set found
+                if ( sameKey == true ) {
+                    found = true;
+                    lineCmd = readBuffer[iBuffer];
                 }
-
-                // 如果 cache 滿了，隨機選一個 victim 替換掉
-                else {
-
-                    // 如果 victim 沒東西，重設所有 victim
-                    if ( KeyValueStorage::victimPool[dbID].empty() == true )
-                        KeyValueStorage::victimPool[dbID].swap( KeyValueStorage::usedPool[dbID] );
-
-                    // 隨機選一個 victim
-                    auto itVictim = KeyValueStorage::victimPool[dbID].begin();
-                    std::advance( itVictim, random() % KeyValueStorage::victimPool[dbID].size() );
-
-                    // 從 cache 以及 victim pool 刪除 victim
-                    KeyValueStorage::victimPool[dbID].erase( itVictim );
-                    KeyValueStorage::lineEndCache[dbID].erase( key );
-
-                    // 插入 <key, lineEnd> 到 cache 以及 victim pool
-                    KeyValueStorage::victimPool[dbID].insert( key );
-                    KeyValueStorage::lineEndCache[dbID].insert( make_pair( key, lineEnd ) );
-                }
-
-                return make_pair( lineEnd, tmp );
             }
         }
 
-        return make_pair( -1, "EMPTY" );
+        // clear db tags and free buffer
+        db.clear();
+        delete[] readBuffer;
+
+        // 檢查是否找到 line end
+        if ( found == false )
+            return make_pair( -1, "EMPTY" );
+
+        // 若有找到就把 lineEnd 加入 Cache 並回傳 lineEnd, lineCmd
+        else {
+            // 如果 cache 沒滿，就直接將 <key, lineEnd> insert 進 cache 以及 victim pool
+            if ( KeyValueStorage::lineEndCache[dbID].size() < MaxCacheSize ) {
+                KeyValueStorage::lineEndCache[dbID].insert( make_pair( key, lineEnd ) );
+                KeyValueStorage::victimPool[dbID].insert( key );
+            }
+
+            // 如果 cache 滿了，隨機選一個 victim 替換掉
+            else {
+                // 如果 victim 沒東西，重設所有 victim
+                if ( KeyValueStorage::victimPool[dbID].empty() == true )
+                    KeyValueStorage::victimPool[dbID].swap( KeyValueStorage::usedPool[dbID] );
+
+                // 隨機選一個 victim
+                auto itVictim = KeyValueStorage::victimPool[dbID].begin();
+                std::advance( itVictim, random() % KeyValueStorage::victimPool[dbID].size() );
+
+                // 從 cache 以及 victim pool 刪除 victim
+                KeyValueStorage::victimPool[dbID].erase( itVictim );
+                KeyValueStorage::lineEndCache[dbID].erase( key );
+
+                // 插入 <key, lineEnd> 到 cache 以及 victim pool
+                KeyValueStorage::victimPool[dbID].insert( key );
+                KeyValueStorage::lineEndCache[dbID].insert( make_pair( key, lineEnd ) );
+            }
+
+            // 回傳 lineEnd, lineCmd
+            return make_pair( lineEnd, lineCmd );
+        }
     }
 }
 
