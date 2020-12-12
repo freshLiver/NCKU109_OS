@@ -1,7 +1,6 @@
 #if !defined( KEYVALUESTORAGE_H )
 #define KEYVALUESTORAGE_H
 
-#include "macros.h"
 #include <cstdio>
 #include <cstdlib>
 #include <ctime>
@@ -23,11 +22,21 @@ using std::set;
 using std::string;
 using std::thread;
 
+#define DEBUG( format, ... ) printf( "DEBUG >>> " format "\n------- DEBUG END\n\n", __VA_ARGS__ )
+
+
+typedef long long LL;
+typedef int CmdType;
+#define PUT 1
+#define GET 2
+#define SCAN 3
+
 #define MaxReadBuf 50
 #define MaxBufSize 1000000
-#define MaxCacheSize 100000
+#define MaxCacheSize 300000
 #define ThreadingThreshold 500
 #define DBNum 10
+
 
 class KeyValueStorage {
 

@@ -1,7 +1,6 @@
 #include "KeyValueStorage.h"
 #include <ctime>
 
-
 /**
  * @brief Convert input file name to output file name by change .input -> .output
  *
